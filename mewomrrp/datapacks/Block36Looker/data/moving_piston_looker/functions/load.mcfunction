@@ -1,1 +1,0 @@
-execute at @a run say Success!
