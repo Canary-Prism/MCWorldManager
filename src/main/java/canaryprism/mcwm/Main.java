@@ -79,27 +79,19 @@ public class Main {
             saves_directory = System.getenv("AppData") + "/.minecraft";
         } else if (OS.contains("MAC")) {
             saves_directory = System.getProperty("user.home") + "/Library/Application Support/minecraft";
-            // if we are on a Mac, we are not done, we look for "Application Support"
         } else { // we'll just assume Linux or something else
             saves_directory = System.getProperty("user.home") + "/.minecraft";
         }
         saves_directory += "/saves";
 
         FlatMacDarkLaf.setup();
-
-        // try (
-        //     var fis = new BufferedInputStream(new FileInputStream("/Users/mia/Downloads/archive test/Crawling 2.zip"));
-        //     var ais = createArchiveInputStream(fis)
-        // ) {
-        //     ArchiveEntry entry;
-        //     while ((entry = ais.getNextEntry()) != null) {
-        //         System.out.println(entry.getName());
-        //     }
-        // } catch (Exception e) {
-        //     e.printStackTrace();
-        // }
-
-        new Main(new File(saves_directory)).show();
+        
+        try {
+            new Main(new File(saves_directory)).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Fatal Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
     public static String getStackTraceAsString(Throwable throwable) {
         StringWriter stringWriter = new StringWriter();
@@ -114,7 +106,7 @@ public class Main {
 
     public Main(File folder) {
         if (!folder.exists()) {
-            throw new IllegalArgumentException("Folder does not exist: " + folder);
+            throw new IllegalArgumentException("Minecraft saves folder does not exist: " + folder);
         }
         if (!folder.isDirectory()) {
             throw new IllegalArgumentException("Not a folder: " + folder);
