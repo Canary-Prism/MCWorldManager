@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -457,6 +458,35 @@ public class Main {
                 }
                 try {
                     var data = WorldData.parse(input);
+
+                    var panel = new JPanel();
+                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+                    panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+                    var label_panel = new JPanel();
+                    label_panel.add(new JLabel("""
+                        <html>
+                            <h2>Do you want to import this world?</h2>
+                        </html>
+                        """));
+
+                    panel.add(label_panel);
+
+                    panel.add(Box.createVerticalStrut(5));
+
+                    var display_panel = new JPanel(new BorderLayout());
+                    var world_entry = WorldListEntry.of(new WorldFile(input, data));
+                    world_entry.setPreferredSize(new Dimension(500, 50));
+                    display_panel.add(world_entry, BorderLayout.CENTER);
+
+                    panel.add(display_panel);
+
+                    var confirm = JOptionPane.showConfirmDialog(frame, panel,
+                            "Import World", JOptionPane.YES_NO_OPTION);
+                    
+                    if (confirm != JOptionPane.YES_OPTION) {
+                        return;
+                    }
                     
                     var name = data.worldName();
                     if (input.isDirectory()) {
