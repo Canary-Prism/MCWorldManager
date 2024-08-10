@@ -27,5 +27,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.1.0
+- better import dialogue
+- shows proper error dialogue if you don't have minecraft folder
+
 ### 1.0.0
-made the thing
+- made the thing
