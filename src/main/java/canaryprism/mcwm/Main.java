@@ -636,7 +636,7 @@ public class Main {
                     var zos = new ZipOutputStream(fos)
                 ) {
                     if (file.isDirectory()) {
-                        zipDirectory(file, new File(""), zos);
+                        zipDirectory(file, file.getName(), zos);
                     } else {
                         zos.putNextEntry(new ZipEntry(file.getName()));
                         try (var fis = new FileInputStream(file)) {
@@ -655,13 +655,13 @@ public class Main {
         });
     }
 
-    private void zipDirectory(File folder, File parent_folder, ZipOutputStream zos) throws IOException {
+    private void zipDirectory(File folder, String parent_folder, ZipOutputStream zos) throws IOException {
         for (File file : folder.listFiles()) {
             if (file.isDirectory()) {
-                zipDirectory(file, new File(parent_folder, file.getName()), zos);
+                zipDirectory(file, parent_folder + "/" + file.getName(), zos);
             } else {
                 try (var fis = new FileInputStream(file)) {
-                    var zipEntry = new ZipEntry(new File(parent_folder, file.getName()).getAbsolutePath());
+                    var zipEntry = new ZipEntry(parent_folder + "/" + file.getName());
                     zos.putNextEntry(zipEntry);
                     fis.transferTo(zos);
                     zos.closeEntry();
