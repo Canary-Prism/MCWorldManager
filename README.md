@@ -27,6 +27,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.2.2
+- fixed import and delete system
+- fixed autoreload race conditions
+
 ### 1.2.1
 - fixed export system (oops)
 
