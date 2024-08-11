@@ -220,15 +220,19 @@ public class Main {
         var action_panel = new JPanel();
         action_panel.setLayout(new BoxLayout(action_panel, BoxLayout.X_AXIS));
 
-        var import_button = new JButton("Import");
+        var import_button = new JButton("Import World");
         import_button.addActionListener((e) -> {
             importWorld();
         });
+        import_button.setToolTipText("Import a Minecraft world");
 
         var refresh_button = new JButton("Refresh");
         refresh_button.addActionListener((e) -> {
             reloadAllWorlds();
         });
+        refresh_button.setToolTipText("Refresh the list of worlds");
+
+        auto_refresh_checkbox.setToolTipText("Automatically refresh the list of worlds when a change is detected in the folder");
 
         action_panel.add(import_button);
         action_panel.add(refresh_button);
