@@ -11,10 +11,14 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -529,6 +533,24 @@ public class Main {
                     
                         try {
                             Files.copy(input.toPath(), output.toPath());
+                            var source = input.toPath();
+                            var target = output.toPath();
+                            Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+                                @Override
+                                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                                    Path targetDir = target.resolve(source.relativize(dir));
+                                    if (!Files.exists(targetDir)) {
+                                        Files.createDirectories(targetDir);
+                                    }
+                                    return FileVisitResult.CONTINUE;
+                                }
+
+                                @Override
+                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                    Files.copy(file, target.resolve(source.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
+                                    return FileVisitResult.CONTINUE;
+                                }
+                            });
                             JOptionPane.showMessageDialog(null, "Import completed successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -739,11 +761,32 @@ public class Main {
             }
             var confirm = JOptionPane.showConfirmDialog(frame, "Are you sure you want to delete: " + name, "Delete", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                if (!file.delete()) {
-                    JOptionPane.showMessageDialog(frame, "Failed to delete: " + name, "Error", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    reloadAllWorlds();
+                try {
+                    if (file.isDirectory()) {
+                        var path = file.toPath();
+                        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
+                            @Override
+                            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                                Files.delete(file);
+                                return FileVisitResult.CONTINUE;
+                            }
+    
+                            @Override
+                            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                                Files.delete(dir);
+                                return FileVisitResult.CONTINUE;
+                            }
+                        });
+                    } else {
+                        Files.delete(file.toPath());
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Failed to delete: " + name + " - " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
+
+                reloadAllWorlds();
             }
         });
     }
