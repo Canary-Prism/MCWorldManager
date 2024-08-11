@@ -85,10 +85,32 @@ public class Main {
         }
         saves_directory += "/saves";
 
+        var saves = new File(saves_directory);
+
         FlatMacDarkLaf.setup();
+
+        var fc = new JFileChooser();
+        fc.setDialogTitle("Select Minecraft Saves Folder");
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        fc.setFileHidingEnabled(false);
+
+        while (!saves.exists()) {
+            var input = fc.showOpenDialog(null);
+            if (input != JFileChooser.APPROVE_OPTION) {
+                return;
+            }
+            saves = fc.getSelectedFile();
+            if (saves.exists() && saves.isDirectory()) {
+                if (saves.getName().contains("minecraft") && new File(saves, "saves").exists() && new File(saves, "saves").isDirectory()) {
+                    saves = new File(saves, "saves");
+                }
+                break;
+            }
+        }
+
         
         try {
-            new Main(new File(saves_directory)).show();
+            new Main(saves).show();
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Fatal Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
