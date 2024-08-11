@@ -27,6 +27,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.2.1
+- fixed export system (oops)
+
 ### 1.2.0
 - better import dialogue again
 - added a hotfix fallback which just asks you where the minecraft saves folder is if it can't find one
