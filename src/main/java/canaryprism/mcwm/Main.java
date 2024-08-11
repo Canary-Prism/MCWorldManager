@@ -441,16 +441,18 @@ public class Main {
 
 
     private void reloadAllWorlds() {
-        worlds.clear();
-        for (var file : folder.listFiles()) {
-            try {
-                var data = WorldData.parse(file);
-                worlds.add(new WorldFile(file, data));
-            } catch (ParsingException e) {
-                worlds.add(new UnknownFile(file, e));
+        synchronized (worlds) {
+            worlds.clear();
+            for (var file : folder.listFiles()) {
+                try {
+                    var data = WorldData.parse(file);
+                    worlds.add(new WorldFile(file, data));
+                } catch (ParsingException e) {
+                    worlds.add(new UnknownFile(file, e));
+                }
             }
+            list.setListData(worlds.toArray(new LoadedFile[0]));
         }
-        list.setListData(worlds.toArray(new LoadedFile[0]));
     }
 
     private final JFileChooser import_fc = new JFileChooser();
