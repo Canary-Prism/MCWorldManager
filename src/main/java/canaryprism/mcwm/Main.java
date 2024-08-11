@@ -577,7 +577,7 @@ public class Main {
     private final JFileChooser export_fc = new JFileChooser();
     {
         export_fc.setDialogTitle("Export World");
-        export_fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        export_fc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
         export_fc.setFileFilter(new javax.swing.filechooser.FileFilter() {
             @Override
@@ -592,14 +592,19 @@ public class Main {
         });
     }
 
+    private volatile String last_export_directory = System.getProperty("user.home");
+
     private void export(WorldFile loaded_file) {
         Thread.ofPlatform().start(() -> {
             var file = loaded_file.file();
+
+            export_fc.setSelectedFile(new File(last_export_directory + "/" + file.getName() + ".zip"));
 
             var result = export_fc.showSaveDialog(frame);
 
             if (result == JFileChooser.APPROVE_OPTION) {
                 var output = export_fc.getSelectedFile();
+                last_export_directory = output.getParent();
                 if (!output.getName().endsWith(".zip")) {
                     output = new File(output.getParentFile(), output.getName() + ".zip");
                 }
