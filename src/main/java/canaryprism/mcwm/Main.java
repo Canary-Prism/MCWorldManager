@@ -945,7 +945,7 @@ public class Main {
     }
 
 
-    static ArchiveInputStream<? extends ArchiveEntry> createArchiveInputStream(InputStream is) throws FileNotFoundException, ArchiveException {
+    public static ArchiveInputStream<? extends ArchiveEntry> createArchiveInputStream(InputStream is) throws FileNotFoundException, ArchiveException {
         var type = ArchiveStreamFactory.detect(is);
 
         if (ArchiveStreamFactory.ZIP.equals(type)) {

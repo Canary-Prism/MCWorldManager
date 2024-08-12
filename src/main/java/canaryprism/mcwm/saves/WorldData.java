@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -19,10 +18,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.ArchiveException;
-import org.apache.commons.compress.archivers.ArchiveInputStream;
-import org.apache.commons.compress.archivers.ArchiveStreamFactory;
-import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-
+import canaryprism.mcwm.Main;
 import net.querz.nbt.io.NBTDeserializer;
 import net.querz.nbt.tag.CompoundTag;
 
@@ -46,7 +42,7 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
                 var images = new HashMap<String, byte[]>();
                 try (
                     var fis = new BufferedInputStream(new FileInputStream(file));
-                    var i = createArchiveInputStream(fis);
+                    var i = Main.createArchiveInputStream(fis);
                 ) {
                     ArchiveEntry entry = null;
                     while ((entry = i.getNextEntry()) != null) {
@@ -140,13 +136,5 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
         } catch (Exception e) {
             throw new ParsingException("Malformed level.dat file", e);
         }
-    }
-    static ArchiveInputStream<? extends ArchiveEntry> createArchiveInputStream(InputStream is) throws FileNotFoundException, ArchiveException {
-        var type = ArchiveStreamFactory.detect(is);
-
-        if (ArchiveStreamFactory.ZIP.equals(type)) {
-            return new ZipArchiveInputStream(is, StandardCharsets.UTF_8.name(), true, true);
-        }
-        return new ArchiveStreamFactory().createArchiveInputStream(type, is);
     }
 }
