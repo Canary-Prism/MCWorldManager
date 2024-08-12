@@ -63,6 +63,7 @@ import canaryprism.mcwm.swing.file.WorldFile;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -275,6 +276,18 @@ public class Main {
         });
         import_button.setToolTipText("Import a Minecraft world");
 
+        var open_button = new JButton("Open Folder");
+        if (Desktop.isDesktopSupported()) {
+            open_button.addActionListener((e) -> {
+                open(folder);
+            });
+            open_button.setToolTipText("Open the Minecraft saves folder");
+        } else {
+            open_button.setEnabled(false);
+            open_button.setToolTipText("Open the Minecraft saves folder (not supported on this computer)");
+        }
+
+
         var refresh_button = new JButton("Refresh");
         refresh_button.addActionListener((e) -> {
             reloadAllWorlds();
@@ -284,6 +297,7 @@ public class Main {
         auto_refresh_checkbox.setToolTipText("Automatically refresh the list of worlds when a change is detected in the folder");
 
         action_panel.add(import_button);
+        action_panel.add(open_button);
         action_panel.add(refresh_button);
         action_panel.add(auto_refresh_checkbox);
 
@@ -904,6 +918,17 @@ public class Main {
             e.printStackTrace();
             JOptionPane.showMessageDialog(frame, "Failed to copy to clipboard: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void open(File file) {
+        Thread.ofVirtual().start(() -> {
+            try {
+                Desktop.getDesktop().open(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Failed to open: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 
     public void show() {
