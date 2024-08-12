@@ -636,8 +636,8 @@ public class Main {
         var ve = Executors.newVirtualThreadPerTaskExecutor();
 
         var futures = Stream.of(worlds).map((world) -> CompletableFuture.runAsync(() -> {
-            var data = world.data();
-            var input = world.file();
+            if (!(world instanceof WorldFile(var input, var data))) 
+                throw new IllegalArgumentException("what");
 
             var name = data.worldName();
             var output = outputs.get(world);
