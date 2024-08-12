@@ -27,6 +27,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.4.1
+- just really minor changes here and there 
+
 ### 1.4.0
 - made importing multiple worlds run concurrently (also they don't show success dialogue for each one now)
 - added Open Folder button
