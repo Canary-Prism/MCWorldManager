@@ -65,6 +65,9 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDropEvent;
 import java.io.BufferedInputStream;
 import static java.nio.file.StandardWatchEventKinds.*;
 
@@ -224,6 +227,22 @@ public class Main {
 
         world_list_pane.setViewportView(list);
         world_list_pane.setMinimumSize(new Dimension(500, 80));
+
+        world_list_pane.setDropTarget(new DropTarget() {
+            @SuppressWarnings("unchecked")
+            public synchronized void drop(DropTargetDropEvent evt) {
+                try {
+                    evt.acceptDrop(DnDConstants.ACTION_COPY);
+                    List<File> droppedFiles = (List<File>) evt.getTransferable()
+                            .getTransferData(DataFlavor.javaFileListFlavor);
+                    Thread.ofPlatform().start(() -> {
+                        importWorlds(droppedFiles);
+                    });
+                    evt.dropComplete(true);
+                } catch (Exception ex) {
+                }
+            }
+        });
 
         frame.getContentPane().add(world_list_pane, BorderLayout.CENTER);
 
@@ -583,7 +602,7 @@ public class Main {
 
                     while (output.exists()) {
                         var new_name = JOptionPane.showInputDialog(frame,
-                                "World folder with the same name already exists, please pick another folder name",
+                                panel,
                                 "New Name", JOptionPane.QUESTION_MESSAGE);
                         if (new_name == null) {
                             return;
@@ -654,7 +673,7 @@ public class Main {
 
                     while (output.exists()) {
                         var new_name = JOptionPane.showInputDialog(frame,
-                                "World folder with the same name already exists, please pick another folder name",
+                                panel,
                                 "New Name", JOptionPane.QUESTION_MESSAGE);
                         if (new_name == null) {
                             return;
