@@ -27,6 +27,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.3.0
+- added importing multiple worlds at the same time
+- added drag and drop importing feature
+
 ### 1.2.2
 - fixed import and delete system
 - fixed autoreload race conditions
