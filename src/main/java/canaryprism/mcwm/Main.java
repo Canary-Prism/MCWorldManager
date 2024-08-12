@@ -184,7 +184,7 @@ public class Main {
         frame.getContentPane().add(title_panel, BorderLayout.NORTH);
 
 
-        var world_list_panel = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        var world_list_pane = new JScrollPane(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
 
         
@@ -222,10 +222,10 @@ public class Main {
             updateOptionsPanel();
         });
 
-        world_list_panel.setViewportView(list);
-        world_list_panel.setMinimumSize(new Dimension(500, 80));
+        world_list_pane.setViewportView(list);
+        world_list_pane.setMinimumSize(new Dimension(500, 80));
 
-        frame.getContentPane().add(world_list_panel, BorderLayout.CENTER);
+        frame.getContentPane().add(world_list_pane, BorderLayout.CENTER);
 
         var bottom_panel = new JPanel();
         bottom_panel.setLayout(new BoxLayout(bottom_panel, BoxLayout.Y_AXIS));
