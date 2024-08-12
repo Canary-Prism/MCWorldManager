@@ -20,8 +20,12 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -566,52 +570,67 @@ public class Main {
         if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
+        var outputs = new HashMap<WorldFile, File>();
         for (var world : worlds) {
+            var data = world.data();
+            var input = world.file();
+            File output;
+            if (input.isDirectory()) {
+                output = new File(folder, input.getName());
+            } else {
+                output = new File(folder, data.dirName());
+            }
+            if (output.exists() || outputs.containsValue(output)) {
+                panel = new JPanel();
+                panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+                var label_panel = new JPanel();
+
+                label_panel.add(new JLabel("""
+                        <html>
+                            <h2>World folder with the same name already exists, please pick another folder name</h2>
+                        </html>
+                        """));
+
+                panel.add(label_panel);
+
+                panel.add(Box.createVerticalStrut(5));
+
+                var display_panel = new JPanel(new BorderLayout());
+
+                display_panel.setBorder(new EmptyBorder(2, 2, 2, 2));
+                var world_entry = WorldListEntry.of(world);
+                world_entry.setPreferredSize(new Dimension(500, 50));
+                display_panel.add(world_entry, BorderLayout.CENTER);
+
+                panel.add(display_panel);
+
+                while (output.exists() || outputs.containsValue(output)) {
+                    var new_name = JOptionPane.showInputDialog(frame,
+                            panel,
+                            "New Name", JOptionPane.QUESTION_MESSAGE);
+                    if (new_name == null) {
+                        return;
+                    }
+                    output = new File(folder, new_name);
+                }
+
+                panel = null;
+            }
+            outputs.put(world, output);
+        }
+
+        var ve = Executors.newVirtualThreadPerTaskExecutor();
+
+        var futures = Stream.of(worlds).map((world) -> CompletableFuture.runAsync(() -> {
             var data = world.data();
             var input = world.file();
 
             var name = data.worldName();
+            var output = outputs.get(world);
+
             if (input.isDirectory()) {
                 // we just copy the directory
-                var output = new File(folder, input.getName());
-
-                if (output.exists()) {
-                    panel = new JPanel();
-                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
-                    var label_panel = new JPanel();
-
-                    label_panel.add(new JLabel("""
-                            <html>
-                                <h2>World folder with the same name already exists, please pick another folder name</h2>
-                            </html>
-                            """));
-                    
-                    panel.add(label_panel);
-
-                    panel.add(Box.createVerticalStrut(5));
-
-                    var display_panel = new JPanel(new BorderLayout());
-
-                    display_panel.setBorder(new EmptyBorder(2, 2 ,2, 2));
-                    var world_entry = WorldListEntry.of(world);
-                    world_entry.setPreferredSize(new Dimension(500, 50));
-                    display_panel.add(world_entry, BorderLayout.CENTER);
-
-                    panel.add(display_panel);
-
-                    while (output.exists()) {
-                        var new_name = JOptionPane.showInputDialog(frame,
-                                panel,
-                                "New Name", JOptionPane.QUESTION_MESSAGE);
-                        if (new_name == null) {
-                            return;
-                        }
-                        output = new File(folder, new_name);
-                    }
-
-                    panel = null;
-                }
 
                 try {
                     Files.copy(input.toPath(), output.toPath());
@@ -635,8 +654,7 @@ public class Main {
                             return FileVisitResult.CONTINUE;
                         }
                     });
-                    JOptionPane.showMessageDialog(null, "Import completed successfully", "Success",
-                            JOptionPane.INFORMATION_MESSAGE);
+
                 } catch (IOException e) {
                     e.printStackTrace();
                     JOptionPane.showMessageDialog(frame, "Failed to import world: " + name + " - " + e.getMessage(),
@@ -644,45 +662,6 @@ public class Main {
                     return;
                 }
             } else {
-                var output = new File(folder, data.dirName());
-
-                if (output.exists()) {
-                    panel = new JPanel();
-                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
-                    var label_panel = new JPanel();
-
-                    label_panel.add(new JLabel("""
-                            <html>
-                                <h2>World folder with the same name already exists, please pick another folder name</h2>
-                            </html>
-                            """));
-
-                    panel.add(label_panel);
-
-                    panel.add(Box.createVerticalStrut(5));
-
-                    var display_panel = new JPanel(new BorderLayout());
-
-                    display_panel.setBorder(new EmptyBorder(2, 2, 2, 2));
-                    var world_entry = WorldListEntry.of(world);
-                    world_entry.setPreferredSize(new Dimension(500, 50));
-                    display_panel.add(world_entry, BorderLayout.CENTER);
-
-                    panel.add(display_panel);
-
-                    while (output.exists()) {
-                        var new_name = JOptionPane.showInputDialog(frame,
-                                panel,
-                                "New Name", JOptionPane.QUESTION_MESSAGE);
-                        if (new_name == null) {
-                            return;
-                        }
-                        output = new File(folder, new_name);
-                    }
-
-                    panel = null;
-                }
 
                 var root = data.dirName().isEmpty();
 
@@ -711,17 +690,22 @@ public class Main {
                         }
                     }
 
-                    JOptionPane.showMessageDialog(null, "Import completed successfully", "Success",
-                            JOptionPane.INFORMATION_MESSAGE);
-
                 } catch (Exception e) {
                     e.printStackTrace();
                     JOptionPane.showMessageDialog(frame, "Failed to import world: " + name + " - " + e.getMessage(),
                             "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
+                    
+                    throw new RuntimeException(e);
                 }
             }
-        }
+        }, ve)).toList();
+
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).exceptionally((_) -> null).join();
+
+
+        JOptionPane.showMessageDialog(null, futures.stream().filter(e -> !e.isCompletedExceptionally()).count() + " of " + futures.size() + " worlds imported successfully", "Import Worlds",
+                JOptionPane.INFORMATION_MESSAGE);
+
         reloadAllWorlds();
     }
 
