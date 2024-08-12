@@ -948,7 +948,7 @@ public class Main {
     public static ArchiveInputStream<? extends ArchiveEntry> createArchiveInputStream(InputStream is) throws FileNotFoundException, ArchiveException {
         var type = ArchiveStreamFactory.detect(is);
 
-        if (ArchiveStreamFactory.ZIP.equals(type)) {
+        if (ArchiveStreamFactory.ZIP.equals(type)) { // zip files are special for some reason... unless other ones are too and I just don't know
             return new ZipArchiveInputStream(is, StandardCharsets.UTF_8.name(), true, true);
         }
         return new ArchiveStreamFactory().createArchiveInputStream(type, is);
