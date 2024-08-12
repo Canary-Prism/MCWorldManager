@@ -27,6 +27,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.4.0
+- made importing multiple worlds run concurrently (also they don't show success dialogue for each one now)
+- added Open Folder button
+
 ### 1.3.0
 - added importing multiple worlds at the same time
 - added drag and drop importing feature
