@@ -22,6 +22,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -248,7 +249,7 @@ public class Main {
 
         var import_button = new JButton("Import World");
         import_button.addActionListener((e) -> {
-            importWorld();
+            importButton();
         });
         import_button.setToolTipText("Import a Minecraft world");
 
@@ -459,6 +460,7 @@ public class Main {
     {
         import_fc.setDialogTitle("Import World");
         import_fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        import_fc.setMultiSelectionEnabled(true);
         import_fc.setFileFilter(new javax.swing.filechooser.FileFilter() {
             @Override
             public boolean accept(File f) {
@@ -477,147 +479,231 @@ public class Main {
         });
     }
 
-    private void importWorld() {
+    private void importButton() {
         Thread.ofPlatform().start(() -> {
-
             var result = import_fc.showOpenDialog(frame);
 
             if (result == JFileChooser.APPROVE_OPTION) {
-                var input = import_fc.getSelectedFile();
-                if (!input.exists()) {
-                    JOptionPane.showMessageDialog(frame, "File does not exist: " + input, "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                try {
-                    var data = WorldData.parse(input);
+                var inputs = List.of(import_fc.getSelectedFiles());
+                importWorlds(inputs);
+            }
+        });
+    }
 
-                    var panel = new JPanel();
+    private void importWorlds(List<File> files) {
+
+        for (var file : files) {
+            if (!file.exists()) {
+                JOptionPane.showMessageDialog(frame, "File does not exist: " + file, "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+
+        var worlds = files.stream().flatMap(file -> {
+            try {
+                return Stream.of(new WorldFile(file, WorldData.parse(file)));
+            } catch (ParsingException e) {
+                JOptionPane.showMessageDialog(frame,
+                        file.getName() + " is not a Minecraft world: " + e.getMessage(), "Error",
+                        JOptionPane.ERROR_MESSAGE);
+                return Stream.empty();
+            }
+        }).toArray(WorldFile[]::new);
+
+        var panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        {
+            var label_panel = new JPanel();
+            label_panel.add(new JLabel("""
+                    <html>
+                        <h2>Do you want to import these worlds?</h2>
+                    </html>
+                    """));
+    
+            panel.add(label_panel);
+    
+            panel.add(Box.createVerticalStrut(5));
+        }
+
+        for (var world : worlds) {
+            var display_panel = new JPanel(new BorderLayout());
+            display_panel.setBorder(new EmptyBorder(2, 2 ,2, 2));
+            var world_entry = WorldListEntry.of(world);
+            world_entry.setPreferredSize(new Dimension(500, 50));
+            display_panel.add(world_entry, BorderLayout.CENTER);
+
+            panel.add(display_panel);
+        }
+
+        var confirm = JOptionPane.showConfirmDialog(frame, panel,
+                "Import World", JOptionPane.YES_NO_OPTION);
+
+        // deallocate the panel for good measure
+        panel = null;
+
+        if (confirm != JOptionPane.YES_OPTION) {
+            return;
+        }
+        for (var world : worlds) {
+            var data = world.data();
+            var input = world.file();
+
+            var name = data.worldName();
+            if (input.isDirectory()) {
+                // we just copy the directory
+                var output = new File(folder, input.getName());
+
+                if (output.exists()) {
+                    panel = new JPanel();
                     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-                    panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
                     var label_panel = new JPanel();
+
                     label_panel.add(new JLabel("""
-                        <html>
-                            <h2>Do you want to import this world?</h2>
-                        </html>
-                        """));
+                            <html>
+                                <h2>World folder with the same name already exists, please pick another folder name</h2>
+                            </html>
+                            """));
+                    
+                    panel.add(label_panel);
+
+                    panel.add(Box.createVerticalStrut(5));
+
+                    var display_panel = new JPanel(new BorderLayout());
+
+                    display_panel.setBorder(new EmptyBorder(2, 2 ,2, 2));
+                    var world_entry = WorldListEntry.of(world);
+                    world_entry.setPreferredSize(new Dimension(500, 50));
+                    display_panel.add(world_entry, BorderLayout.CENTER);
+
+                    panel.add(display_panel);
+
+                    while (output.exists()) {
+                        var new_name = JOptionPane.showInputDialog(frame,
+                                "World folder with the same name already exists, please pick another folder name",
+                                "New Name", JOptionPane.QUESTION_MESSAGE);
+                        if (new_name == null) {
+                            return;
+                        }
+                        output = new File(folder, new_name);
+                    }
+
+                    panel = null;
+                }
+
+                try {
+                    Files.copy(input.toPath(), output.toPath());
+                    var source = input.toPath();
+                    var target = output.toPath();
+                    Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                                throws IOException {
+                            Path targetDir = target.resolve(source.relativize(dir));
+                            if (!Files.exists(targetDir)) {
+                                Files.createDirectories(targetDir);
+                            }
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            Files.copy(file, target.resolve(source.relativize(file)),
+                                    StandardCopyOption.REPLACE_EXISTING);
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
+                    JOptionPane.showMessageDialog(null, "Import completed successfully", "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Failed to import world: " + name + " - " + e.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } else {
+                var output = new File(folder, data.dirName());
+
+                if (output.exists()) {
+                    panel = new JPanel();
+                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+                    var label_panel = new JPanel();
+
+                    label_panel.add(new JLabel("""
+                            <html>
+                                <h2>World folder with the same name already exists, please pick another folder name</h2>
+                            </html>
+                            """));
 
                     panel.add(label_panel);
 
                     panel.add(Box.createVerticalStrut(5));
 
                     var display_panel = new JPanel(new BorderLayout());
-                    var world_entry = WorldListEntry.of(new WorldFile(input, data));
+
+                    display_panel.setBorder(new EmptyBorder(2, 2, 2, 2));
+                    var world_entry = WorldListEntry.of(world);
                     world_entry.setPreferredSize(new Dimension(500, 50));
                     display_panel.add(world_entry, BorderLayout.CENTER);
 
                     panel.add(display_panel);
 
-                    var confirm = JOptionPane.showConfirmDialog(frame, panel,
-                            "Import World", JOptionPane.YES_NO_OPTION);
-                    
-                    if (confirm != JOptionPane.YES_OPTION) {
-                        return;
-                    }
-                    
-                    var name = data.worldName();
-                    if (input.isDirectory()) {
-                        // we just copy the directory
-                        var output = new File(folder, input.getName());
-
-                        while (output.exists()) {
-                            var new_name = JOptionPane.showInputDialog(frame, "World folder with the same name already exists, please pick another folder name", "New Name", JOptionPane.QUESTION_MESSAGE);
-                            if (new_name == null) {
-                                return;
-                            }
-                            output = new File(folder, new_name);
-                        }
-                    
-                        try {
-                            Files.copy(input.toPath(), output.toPath());
-                            var source = input.toPath();
-                            var target = output.toPath();
-                            Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
-                                @Override
-                                public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
-                                    Path targetDir = target.resolve(source.relativize(dir));
-                                    if (!Files.exists(targetDir)) {
-                                        Files.createDirectories(targetDir);
-                                    }
-                                    return FileVisitResult.CONTINUE;
-                                }
-
-                                @Override
-                                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                                    Files.copy(file, target.resolve(source.relativize(file)), StandardCopyOption.REPLACE_EXISTING);
-                                    return FileVisitResult.CONTINUE;
-                                }
-                            });
-                            JOptionPane.showMessageDialog(null, "Import completed successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                            JOptionPane.showMessageDialog(frame, "Failed to import world: " + name + " - " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    while (output.exists()) {
+                        var new_name = JOptionPane.showInputDialog(frame,
+                                "World folder with the same name already exists, please pick another folder name",
+                                "New Name", JOptionPane.QUESTION_MESSAGE);
+                        if (new_name == null) {
                             return;
                         }
-                    } else {
-                        var output = new File(folder, data.dirName());
-    
-                        while (output.exists()) {
-                            var new_name = JOptionPane.showInputDialog(frame,
-                                    "World folder with the same name already exists, please pick another folder name",
-                                    "New Name", JOptionPane.QUESTION_MESSAGE);
-                            if (new_name == null) {
-                                return;
-                            }
-                            output = new File(folder, new_name);
+                        output = new File(folder, new_name);
+                    }
+
+                    panel = null;
+                }
+
+                var root = data.dirName().isEmpty();
+
+                try (
+                        var fis = new BufferedInputStream(new FileInputStream(input));
+                        var ais = createArchiveInputStream(fis)) {
+                    Files.createDirectories(output.toPath());
+
+                    ArchiveEntry entry;
+                    while ((entry = ais.getNextEntry()) != null) {
+                        var entry_name = entry.getName();
+
+                        if (!root) {
+                            entry_name = entry_name.substring(data.dirName().length() + 1);
                         }
 
-                        var root = data.dirName().isEmpty();
-    
-                        try (
-                                var fis = new BufferedInputStream(new FileInputStream(input));
-                                var ais = createArchiveInputStream(fis)) {
-                            Files.createDirectories(output.toPath());
-    
-                            ArchiveEntry entry;
-                            while ((entry = ais.getNextEntry()) != null) {
-                                var entry_name = entry.getName();
+                        Path entry_path = output.toPath().resolve(entry_name);
 
-                                if (!root) {
-                                    entry_name = entry_name.substring(data.dirName().length() + 1);
-                                }
-                                
-                                Path entry_path = output.toPath().resolve(entry_name);
-
-                                if (entry.isDirectory()) {
-                                    Files.createDirectories(entry_path);
-                                } else {
-                                    Files.createDirectories(entry_path.getParent());
-                                    try (OutputStream os = Files.newOutputStream(entry_path)) {
-                                        ais.transferTo(os);
-                                    }
-                                }
+                        if (entry.isDirectory()) {
+                            Files.createDirectories(entry_path);
+                        } else {
+                            Files.createDirectories(entry_path.getParent());
+                            try (OutputStream os = Files.newOutputStream(entry_path)) {
+                                ais.transferTo(os);
                             }
-    
-                            JOptionPane.showMessageDialog(null, "Import completed successfully", "Success",
-                                    JOptionPane.INFORMATION_MESSAGE);
-    
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            JOptionPane.showMessageDialog(frame, "Failed to import world: " + name + " - " + e.getMessage(),
-                                    "Error", JOptionPane.ERROR_MESSAGE);
-                            return;
                         }
                     }
-                    reloadAllWorlds();
-                } catch (ParsingException e) {
+
+                    JOptionPane.showMessageDialog(null, "Import completed successfully", "Success",
+                            JOptionPane.INFORMATION_MESSAGE);
+
+                } catch (Exception e) {
                     e.printStackTrace();
-                    JOptionPane.showMessageDialog(frame, input.getName() + " is not a Minecraft world: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, "Failed to import world: " + name + " - " + e.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
             }
-        });
+        }
+        reloadAllWorlds();
     }
 
     private final JFileChooser export_fc = new JFileChooser();
