@@ -1,13 +1,9 @@
 package canaryprism.mcwm.swing.formatting;
 
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.Point;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import javax.swing.JComponent;
 
 import org.apache.commons.lang3.ArrayUtils;
