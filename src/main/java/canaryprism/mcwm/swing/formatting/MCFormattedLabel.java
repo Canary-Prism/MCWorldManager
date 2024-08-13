@@ -130,8 +130,8 @@ public class MCFormattedLabel extends JComponent {
 
         var font = g.getFont();
         var color = g.getColor();
-        var strikethrough = false;
-        var underline = false;
+        var strikethrough = false; // how dare java.awt.Font not have a strikethrough property
+        var underline = false; // ok this is just getting ridiculous
         var obfuscated = false;
 
         var point = this.location;
@@ -144,6 +144,7 @@ public class MCFormattedLabel extends JComponent {
                 if (!obfuscated) {
                     g.drawString(text.text(), x, 0);
                 } else {
+                    // i have no idea how else to do this
                     var chars = text.text().toCharArray();
                     for (int i = 0; i < 3; i++) {
                         ArrayUtils.shuffle(chars);
@@ -152,7 +153,7 @@ public class MCFormattedLabel extends JComponent {
                         g.drawString(shuffled, x, 0);
                     }
                 }
-                var text_width = g.getFontMetrics().stringWidth(text.text());
+                var text_width = g.getFontMetrics().stringWidth(text.text()); // is an int really the most precise type for this?
                 if (strikethrough) {
                     int y = g.getFontMetrics().getAscent() / 2;
                     g.drawLine(x, y, x + text_width, y);
