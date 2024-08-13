@@ -2,12 +2,14 @@ package canaryprism.mcwm.swing;
 
 import java.awt.Color;
 import java.awt.Image;
+import java.awt.Point;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 import javax.imageio.ImageIO;
 
 import canaryprism.mcwm.swing.file.WorldFile;
+import canaryprism.mcwm.swing.formatting.MCFormattedLabel;
 
 public final class WorldEntry extends WorldListEntry {
 
@@ -20,8 +22,12 @@ public final class WorldEntry extends WorldListEntry {
         }
     }
 
+    private final MCFormattedLabel world_label;
+
     private WorldFile file;
     public WorldEntry(WorldFile file) {
+        this.world_label = new MCFormattedLabel(file.data().worldName());
+        add(world_label);
         setWorldFile(file);
     }
 
@@ -31,6 +37,24 @@ public final class WorldEntry extends WorldListEntry {
 
     public void setWorldFile(WorldFile file) {
         this.file = Objects.requireNonNull(file);
+        world_label.setText(file.data().worldName());
+
+        revalidate();
+        repaint();
+    }
+
+    @Override
+    public void doLayout() {
+        super.doLayout();
+
+        var height = getHeight();
+        var x = height + 5;
+        var y_step = height / 3;
+
+        world_label.setSize(getWidth() - x, getHeight() - y_step);
+        world_label.setTextSize(height / 4f);
+        world_label.setTextLocation(new Point(x, y_step));
+        world_label.validate();
     }
 
     @Override
@@ -59,7 +83,8 @@ public final class WorldEntry extends WorldListEntry {
             g.setColor(Color.yellow);
         }
         
-        g.drawString(data.worldName(), x, y += y_step);
+        // g.drawString(data.worldName(), x, y += y_step);
+        y += y_step;
 
         g.setColor(g.getColor().darker());
 
