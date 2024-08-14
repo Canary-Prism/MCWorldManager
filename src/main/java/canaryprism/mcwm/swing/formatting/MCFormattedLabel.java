@@ -146,7 +146,7 @@ public class MCFormattedLabel extends JComponent {
                 } else {
                     // i have no idea how else to do this
                     var chars = text.text().toCharArray();
-                    for (int i = 0; i < 3; i++) {
+                    for (int i = 0; i < 2; i++) {
                         ArrayUtils.shuffle(chars);
 
                         var shuffled = new String(chars);
