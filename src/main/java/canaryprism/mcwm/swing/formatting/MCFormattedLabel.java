@@ -156,11 +156,10 @@ public class MCFormattedLabel extends JComponent {
                 var text_width = g.getFontMetrics().stringWidth(text.text()); // is an int really the most precise type for this?
                 if (strikethrough) {
                     int y = g.getFontMetrics().getAscent() / 2;
-                    g.drawLine(x, y, x + text_width, y);
+                    g.drawLine(x, -y, x + text_width, -y);
                 }
                 if (underline) {
-                    int y = g.getFontMetrics().getAscent();
-                    g.drawLine(x, y, x + text_width, y);
+                    g.drawLine(x, 0, x + text_width, 0);
                 }
 
                 x += text_width;
