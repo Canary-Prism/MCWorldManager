@@ -102,6 +102,7 @@ public class NBTView {
 
         tree.setRootVisible(false);
 
+        tree.setFocusable(false);
 
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
         tree.putClientProperty("JTree.lineStyle", "Angled");
