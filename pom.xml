@@ -42,6 +42,11 @@
         <version>1.27.0</version>
     </dependency>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.12.0</version>
+    </dependency>
+    <dependency>
       <groupId>com.github.Querz</groupId>
       <artifactId>NBT</artifactId>
       <version>6.1</version>
