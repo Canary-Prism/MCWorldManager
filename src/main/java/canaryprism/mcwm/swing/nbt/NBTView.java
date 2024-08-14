@@ -746,7 +746,7 @@ public class NBTView {
 
     private Object edit(Object o) {
         return switch (o) {
-            case ByteTag e -> new ByteTag(prompt("Enter new byte value", Byte::parseByte, e.valueToString()));
+            case ByteTag e -> new ByteTag((byte)prompt("Enter new byte value", Byte::parseByte, e.valueToString()));
             case ShortTag e -> new ShortTag(prompt("Enter new short value", Short::parseShort, e.valueToString()));
             case IntTag e -> new IntTag(prompt("Enter new int value", Integer::parseInt, e.valueToString()));
             case LongTag e -> new LongTag(prompt("Enter new long value", Long::parseLong, e.valueToString()));
