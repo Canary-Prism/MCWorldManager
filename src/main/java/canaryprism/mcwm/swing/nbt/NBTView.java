@@ -648,7 +648,8 @@ public class NBTView {
                         case list -> {
                             var container_type = (TagType) container_type_box.getSelectedItem();
                             var contain_type = container_type.getTypeClass();
-                            var tag = new ListTag<>(contain_type);
+                            @SuppressWarnings({ "unchecked", "rawtypes" })
+                            var tag = new ListTag(contain_type);
                             yield tag;
                         }
                         case int_array -> new IntArrayTag();
@@ -703,7 +704,8 @@ public class NBTView {
                     ok_button.addActionListener((e) -> {
                         var container_type = (TagType) container_type_box.getSelectedItem();
                         var contain_type = container_type.getTypeClass();
-                        var tag = new ListTag<>(contain_type);
+                        @SuppressWarnings({ "unchecked", "rawtypes" })
+                        var tag = new ListTag(contain_type);
                         future.complete(tag);
                     });
                     panel.add(ok_button);
