@@ -27,6 +27,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.6.0
+- added NBT editor
+- fixed formatted text underline and strikethroughs, improved obfuscated (probably, imo)
+
 ### 1.5.0
 - added support for minecraft formatter codes in world name
 
