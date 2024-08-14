@@ -59,6 +59,8 @@ import canaryprism.mcwm.swing.WorldListEntry;
 import canaryprism.mcwm.swing.file.LoadedFile;
 import canaryprism.mcwm.swing.file.UnknownFile;
 import canaryprism.mcwm.swing.file.WorldFile;
+import canaryprism.mcwm.swing.nbt.NBTView;
+import net.querz.nbt.io.NBTUtil;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -72,6 +74,8 @@ import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedInputStream;
 import static java.nio.file.StandardWatchEventKinds.*;
 
@@ -119,8 +123,8 @@ public class Main {
                 break;
             }
         }
-
         
+
         try {
             new Main(saves).show();
         } catch (Exception e) {
