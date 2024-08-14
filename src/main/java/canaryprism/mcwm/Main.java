@@ -59,6 +59,8 @@ import canaryprism.mcwm.swing.WorldListEntry;
 import canaryprism.mcwm.swing.file.LoadedFile;
 import canaryprism.mcwm.swing.file.UnknownFile;
 import canaryprism.mcwm.swing.file.WorldFile;
+import canaryprism.mcwm.swing.nbt.NBTView;
+
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
@@ -118,7 +120,7 @@ public class Main {
                 break;
             }
         }
-        
+
 
         try {
             new Main(saves).show();
@@ -358,11 +360,29 @@ public class Main {
             });
             delete_button.setToolTipText("Delete the world forever");
 
+            var edit_nbt_button = new JButton("Edit NBT Data");
+            edit_nbt_button.addActionListener((e) -> {
+                var selected = list.getSelectedValue();
+                if (selected instanceof WorldFile world) {
+                    Thread.ofVirtual().start(() -> {
+                        try {
+                            new NBTView(new File(world.file(), "level.dat"), this);
+                        } catch (IOException e1) {
+                            JOptionPane.showMessageDialog(frame, "Failed to open NBT Editor: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    });
+                }
+            });
+            edit_nbt_button.setToolTipText("Advanced: Edit the NBT data of the world");
+
             var panel = new JPanel();
 
             panel.add(export_button);
             panel.add(copy_button);
             panel.add(delete_button);
+
+            panel.add(Box.createHorizontalStrut(50));
+            panel.add(edit_nbt_button);
 
             option_buttons_panel.add(panel, SelectedType.world.name());
         }
@@ -476,7 +496,7 @@ public class Main {
 
 
 
-    private void reloadAllWorlds() {
+    public void reloadAllWorlds() {
         synchronized (worlds) {
             worlds.clear();
             for (var file : folder.listFiles()) {

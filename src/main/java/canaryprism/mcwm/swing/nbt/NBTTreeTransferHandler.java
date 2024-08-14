@@ -18,8 +18,8 @@ public class NBTTreeTransferHandler extends TransferHandler {
     DataFlavor nodesFlavor;
     DataFlavor[] flavors = new DataFlavor[1];
     DefaultMutableTreeNode[] nodesToRemove;
+    DefaultMutableTreeNode[] transferring_nodes;
 
-    private DefaultMutableTreeNode originalParent;
     public NBTTreeTransferHandler() {
         try {
             String mimeType = DataFlavor.javaJVMLocalObjectMimeType +
@@ -45,7 +45,7 @@ public class NBTTreeTransferHandler extends TransferHandler {
         // Do not allow a drop on the drag source selections.
         JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
         JTree tree = (JTree) support.getComponent();
-        int dropRow = tree.getRowForPath(dl.getPath());
+        tree.getRowForPath(dl.getPath());
         int[] selRows = tree.getSelectionRows();
         // for (int i = 0; i < selRows.length; i++) {
         //     if (selRows[i] == dropRow) {
@@ -81,6 +81,13 @@ public class NBTTreeTransferHandler extends TransferHandler {
         //     return false;
         // }
 
+        // require only one transferring node
+        if (selRows.length != 1) {
+            return false;
+        }
+
+        // require that the parent node can hold the child node
+
         TreePath path = dl.getPath();
         if (path == null) {
             return false;
@@ -95,29 +102,6 @@ public class NBTTreeTransferHandler extends TransferHandler {
             return false;
         }
         return NBTView.canHold(destination_tag, tag);
-    }
-
-    private boolean haveCompleteNode(JTree tree) {
-        int[] selRows = tree.getSelectionRows();
-        TreePath path = tree.getPathForRow(selRows[0]);
-        DefaultMutableTreeNode first = (DefaultMutableTreeNode) path.getLastPathComponent();
-        int childCount = first.getChildCount();
-        // first has children and no children are selected.
-        if (childCount > 0 && selRows.length == 1)
-            return false;
-        // first may have children.
-        for (int i = 1; i < selRows.length; i++) {
-            path = tree.getPathForRow(selRows[i]);
-            DefaultMutableTreeNode next = (DefaultMutableTreeNode) path.getLastPathComponent();
-            if (first.isNodeChild(next)) {
-                // Found a child of first.
-                if (childCount > selRows.length - 1) {
-                    // Not all children of first are selected.
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     @Override
@@ -148,6 +132,7 @@ public class NBTTreeTransferHandler extends TransferHandler {
                 }
             }
             DefaultMutableTreeNode[] nodes = copies.toArray(new DefaultMutableTreeNode[copies.size()]);
+            this.transferring_nodes = copies.toArray(new DefaultMutableTreeNode[copies.size()]);
             nodesToRemove = toRemove.toArray(new DefaultMutableTreeNode[toRemove.size()]);
             return new NodesTransferable(nodes);
         }
@@ -170,6 +155,11 @@ public class NBTTreeTransferHandler extends TransferHandler {
             // Remove nodes saved in nodesToRemove in createTransferable.
             for (int i = 0; i < nodesToRemove.length; i++) {
                 model.removeNodeFromParent(nodesToRemove[i]);
+            }
+
+            // set the transferred nodes to be selected
+            for (int i = 0; i < transferring_nodes.length; i++) {
+                tree.addSelectionPath(new TreePath(transferring_nodes[i].getPath()));
             }
         }
     }

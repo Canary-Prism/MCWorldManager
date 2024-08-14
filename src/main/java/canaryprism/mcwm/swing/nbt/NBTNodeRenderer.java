@@ -1,6 +1,5 @@
 package canaryprism.mcwm.swing.nbt;
 
-import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -41,8 +40,8 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
         var node = (DefaultMutableTreeNode) value;
 
         var str = switch (node.getUserObject()) {
-            case NamedTag namedTag -> stringifyTag(namedTag);
-            case Tag<?> tag -> stringifyTag(tag);
+            case NamedTag namedTag -> stringifyTag(node, namedTag);
+            case Tag<?> tag -> stringifyTag(node, tag);
             default -> node.getUserObject().toString();
         };
 
@@ -50,13 +49,13 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
 
         return this;
     }
-    public static String stringifyTag(NamedTag tag) {
-        return strinfigyTag(tag.getName(), tag.getTag());
+    public static String stringifyTag(DefaultMutableTreeNode node, NamedTag tag) {
+        return strinfigyTag(node, tag.getName(), tag.getTag());
     }
-    public static String strinfigyTag(String name, Tag<?> tag) {
-        return name + ": " + stringifyTag(tag);
+    public static String strinfigyTag(DefaultMutableTreeNode node, String name, Tag<?> tag) {
+        return name + ": " + stringifyTag(node, tag);
     }
-    public static String stringifyTag(Tag<?> tag) {
+    public static String stringifyTag(DefaultMutableTreeNode node, Tag<?> tag) {
         return switch (tag) {
             case ByteTag byteTag -> byteTag.valueToString();
             case ShortTag shortTag -> shortTag.valueToString();
@@ -64,12 +63,12 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
             case LongTag longTag -> longTag.valueToString();
             case FloatTag floatTag -> floatTag.valueToString();
             case DoubleTag doubleTag -> doubleTag.valueToString();
-            case ByteArrayTag byteArrayTag -> "<" + byteArrayTag.length() + " bytes>";
+            case ByteArrayTag byteArrayTag -> "<" + node.getChildCount() + " bytes>";
             case StringTag stringTag -> stringTag.valueToString();
-            case ListTag<?> listTag -> "<" + listTag.size() + " entries>";
-            case CompoundTag compoundTag -> "<" + compoundTag.size() + " entries>";
-            case IntArrayTag intArrayTag -> "<" + intArrayTag.length() + " ints>";
-            case LongArrayTag longArrayTag -> "<" + longArrayTag.valueToString() + " longs>";
+            case ListTag<?> listTag -> "<" + node.getChildCount() + " items>";
+            case CompoundTag compoundTag -> "<" + node.getChildCount() + " entries>";
+            case IntArrayTag intArrayTag -> "<" + node.getChildCount() + " ints>";
+            case LongArrayTag longArrayTag -> "<" + node.getChildCount() + " longs>";
             default -> tag.getClass().getSimpleName();
         };
     }
