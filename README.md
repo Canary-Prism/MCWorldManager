@@ -27,6 +27,8 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.5.0
+
 ### 1.4.1
 - just really minor changes here and there 
 
