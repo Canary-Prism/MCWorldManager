@@ -507,7 +507,17 @@ public class Main {
                     worlds.add(new UnknownFile(file, e));
                 }
             }
-            list.setListData(worlds.toArray(new LoadedFile[0]));
+            list.setListData(worlds.stream().sorted((a, b) -> {
+                if (a instanceof WorldFile world_a && b instanceof WorldFile world_b) {
+                    return -world_a.data().lastPlayed().compareTo(world_b.data().lastPlayed());
+                } else if (a instanceof WorldFile) {
+                    return -1;
+                } else if (b instanceof WorldFile) {
+                    return 1;
+                } else {
+                    return (int)(b.file().lastModified() - a.file().lastModified());
+                }
+            }).toArray(LoadedFile[]::new));
         }
     }
 
