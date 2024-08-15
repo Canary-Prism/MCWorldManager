@@ -102,7 +102,7 @@ public class NBTView {
 
         tree.setRootVisible(false);
 
-        tree.setFocusable(false);
+        // tree.setFocusable(false);
 
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
         tree.putClientProperty("JTree.lineStyle", "Angled");
@@ -313,7 +313,9 @@ public class NBTView {
                 Thread.ofVirtual().start(() -> {
                     for (var path : selected) {
                         var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
-                        var new_node = new DefaultMutableTreeNode(clone(parent.getUserObject()));
+                        var node_tree = reconstructNbt(parent.getUserObject(), parent);
+                        var new_node = new DefaultMutableTreeNode(node_tree);
+                        load(new_node);
                         parent = (DefaultMutableTreeNode) parent.getParent();
                         parent.insert(new_node, parent.getIndex(node) + 1);
                         treeModel.reload(parent);
@@ -492,6 +494,13 @@ public class NBTView {
         }
     }
 
+    public Object reconstructNbt(Object o, DefaultMutableTreeNode node) {
+        return switch (o) {
+            case NamedTag named_tag -> reconstructNbt(named_tag, node);
+            case Tag<?> tag -> reconstructNbt(tag, node);
+            default -> throw new IllegalArgumentException("Cannot reconstruct " + o.getClass().getSimpleName());
+        };
+    }
     public NamedTag reconstructNbt(NamedTag tag, DefaultMutableTreeNode node) {
         return new NamedTag(tag.getName(), reconstructNbt(tag.getTag(), node));
     }
