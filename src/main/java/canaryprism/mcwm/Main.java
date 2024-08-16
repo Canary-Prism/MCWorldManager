@@ -123,7 +123,7 @@ public class Main {
 
 
         try {
-            new Main(saves).show();
+            new Main(saves.toPath()).show();
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Fatal Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -136,15 +136,15 @@ public class Main {
         return stringWriter.toString();
     }
 
-    private final File folder;
+    private final Path folder;
     private final List<LoadedFile> worlds = new ArrayList<>();
     private final JFrame frame;
 
-    public Main(File folder) {
-        if (!folder.exists()) {
+    public Main(Path folder) {
+        if (!Files.exists(folder)) {
             throw new IllegalArgumentException("Minecraft saves folder does not exist: " + folder);
         }
-        if (!folder.isDirectory()) {
+        if (!Files.isDirectory(folder)) {
             throw new IllegalArgumentException("Not a folder: " + folder);
         }
         this.folder = folder;
@@ -161,8 +161,7 @@ public class Main {
             try {
                 WatchService watchService = FileSystems.getDefault().newWatchService();
     
-                Path path = folder.toPath();
-                path.register(watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
+                folder.register(watchService, ENTRY_CREATE, ENTRY_MODIFY, ENTRY_DELETE);
     
     
                 WatchKey key;
@@ -214,7 +213,7 @@ public class Main {
             } else {
                 panel.setBorder(new EmptyBorder(2, 2, 2, 2));
             }
-            if (value instanceof WorldFile world && !world.file().isDirectory()) {
+            if (value instanceof WorldFile world && !Files.isDirectory(world.path())) {
                 panel.setToolTipText("Warning: This world is compressed and won't be loaded by Minecraft");
             }
             return panel;
@@ -366,7 +365,7 @@ public class Main {
                 if (selected instanceof WorldFile world) {
                     Thread.ofVirtual().start(() -> {
                         try {
-                            new NBTView(new File(world.file(), "level.dat"), this);
+                            new NBTView(world.path().resolve("level.dat").toFile(), this);
                         } catch (IOException e1) {
                             JOptionPane.showMessageDialog(frame, "Failed to open NBT Editor: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                         }
@@ -479,7 +478,7 @@ public class Main {
     private void updateOptionsPanel() {
         switch (list.getSelectedValue()) {
             case WorldFile e -> {
-                if (e.file().isDirectory()) {
+                if (Files.isDirectory(e.path())) {
                     card.show(option_buttons_panel, SelectedType.world.name());
                 } else {
                     card.show(option_buttons_panel, SelectedType.archive.name());
@@ -497,27 +496,48 @@ public class Main {
 
 
     public void reloadAllWorlds() {
-        synchronized (worlds) {
-            worlds.clear();
-            for (var file : folder.listFiles()) {
-                try {
-                    var data = WorldData.parse(file);
-                    worlds.add(new WorldFile(file, data));
-                } catch (ParsingException e) {
-                    worlds.add(new UnknownFile(file, e));
-                }
+        try {
+
+            synchronized (worlds) {
+                worlds.clear();
+    
+                var ex = Executors.newVirtualThreadPerTaskExecutor();
+    
+                var futures = Files.list(folder).map((path) -> CompletableFuture.runAsync(() -> {
+                    try {
+                        var file = new WorldFile(path, WorldData.parse(path));
+                        synchronized (ex) {
+                            worlds.add(file);
+                        }
+                    } catch (ParsingException e) {
+                        var file = new UnknownFile(path, e);
+                        synchronized (ex) {
+                            worlds.add(file);
+                        }
+                    }
+                }, ex)).toList();
+    
+                CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
+    
+                list.setListData(worlds.stream().sorted((a, b) -> {
+                    if (a instanceof WorldFile world_a && b instanceof WorldFile world_b) {
+                        return -world_a.data().lastPlayed().compareTo(world_b.data().lastPlayed());
+                    } else if (a instanceof WorldFile) {
+                        return -1;
+                    } else if (b instanceof WorldFile) {
+                        return 1;
+                    } else {
+                        try {
+                            return (int)(Files.getLastModifiedTime(b.path()).compareTo(Files.getLastModifiedTime(a.path())));
+                        } catch (IOException e) {
+                            return 0; // eh, whatever
+                        }
+                    }
+                }).toArray(LoadedFile[]::new));
             }
-            list.setListData(worlds.stream().sorted((a, b) -> {
-                if (a instanceof WorldFile world_a && b instanceof WorldFile world_b) {
-                    return -world_a.data().lastPlayed().compareTo(world_b.data().lastPlayed());
-                } else if (a instanceof WorldFile) {
-                    return -1;
-                } else if (b instanceof WorldFile) {
-                    return 1;
-                } else {
-                    return (int)(b.file().lastModified() - a.file().lastModified());
-                }
-            }).toArray(LoadedFile[]::new));
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(frame, "Failed to load worlds: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -565,12 +585,12 @@ public class Main {
             }
         }
 
-        var worlds = files.stream().flatMap(file -> {
+        var worlds = files.stream().map(File::toPath).flatMap((path) -> {
             try {
-                return Stream.of(new WorldFile(file, WorldData.parse(file)));
+                return Stream.of(new WorldFile(path, WorldData.parse(path)));
             } catch (ParsingException e) {
                 JOptionPane.showMessageDialog(frame,
-                        file.getName() + " is not a Minecraft world: " + e.getMessage(), "Error",
+                        path.toFile().getName() + " is not a Minecraft world: " + e.getMessage(), "Error",
                         JOptionPane.ERROR_MESSAGE);
                 return Stream.empty();
             }
@@ -612,17 +632,17 @@ public class Main {
         if (confirm != JOptionPane.YES_OPTION) {
             return;
         }
-        var outputs = new HashMap<WorldFile, File>();
+        var outputs = new HashMap<WorldFile, Path>();
         for (var world : worlds) {
             var data = world.data();
-            var input = world.file();
-            File output;
-            if (input.isDirectory()) {
-                output = new File(folder, input.getName());
+            var input = world.path();
+            Path output;
+            if (Files.isDirectory(input)) {
+                output = folder.resolve(input.toFile().getName());
             } else {
-                output = new File(folder, data.dirName());
+                output = folder.resolve(data.dirName());
             }
-            if (output.exists() || outputs.containsValue(output)) {
+            if (Files.exists(output) || outputs.containsValue(output)) {
                 panel = new JPanel();
                 panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 
@@ -647,14 +667,14 @@ public class Main {
 
                 panel.add(display_panel);
 
-                while (output.exists() || outputs.containsValue(output)) {
+                while (Files.exists(output) || outputs.containsValue(output)) {
                     var new_name = JOptionPane.showInputDialog(frame,
                             panel,
                             "New Name", JOptionPane.QUESTION_MESSAGE);
                     if (new_name == null) {
                         return;
                     }
-                    output = new File(folder, new_name);
+                    output = folder.resolve(new_name);
                 }
 
                 panel = null;
@@ -671,13 +691,13 @@ public class Main {
             var name = data.worldName();
             var output = outputs.get(world);
 
-            if (input.isDirectory()) {
+            if (Files.isDirectory(input)) {
                 // we just copy the directory
 
                 try {
-                    Files.copy(input.toPath(), output.toPath());
-                    var source = input.toPath();
-                    var target = output.toPath();
+                    Files.copy(input, output);
+                    var source = input;
+                    var target = output;
                     Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
                         @Override
                         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
@@ -708,9 +728,9 @@ public class Main {
                 var root = data.dirName().isEmpty();
 
                 try (
-                        var fis = new BufferedInputStream(new FileInputStream(input));
+                        var fis = new BufferedInputStream(Files.newInputStream(input));
                         var ais = createArchiveInputStream(fis)) {
-                    Files.createDirectories(output.toPath());
+                    Files.createDirectories(output);
 
                     ArchiveEntry entry;
                     while ((entry = ais.getNextEntry()) != null) {
@@ -720,7 +740,7 @@ public class Main {
                             entry_name = entry_name.substring(data.dirName().length() + 1);
                         }
 
-                        Path entry_path = output.toPath().resolve(entry_name);
+                        Path entry_path = output.resolve(entry_name);
 
                         if (entry.isDirectory()) {
                             Files.createDirectories(entry_path);
@@ -773,7 +793,7 @@ public class Main {
 
     private void export(WorldFile loaded_file) {
         Thread.ofPlatform().start(() -> {
-            var file = loaded_file.file();
+            var file = loaded_file.path().toFile();
 
             export_fc.setSelectedFile(new File(last_export_directory + "/" + file.getName() + ".zip"));
 
@@ -790,7 +810,7 @@ public class Main {
                     var fos = new FileOutputStream(output);
                     var zos = new ZipOutputStream(fos)
                 ) {
-                    if (file.isDirectory()) {
+                    if (Files.isDirectory(file.toPath())) {
                         zipDirectory(file, file.getName(), zos);
                     } else {
                         zos.putNextEntry(new ZipEntry(file.getName()));
@@ -827,8 +847,8 @@ public class Main {
 
     private void expand(WorldFile loaded_file) {
         Thread.ofPlatform().start(() -> {
-            var file = loaded_file.file();
-            var name = file.getName();
+            var path = loaded_file.path();
+            var name = path.toFile().getName();
             var confirm = JOptionPane.showConfirmDialog(frame, "Are you sure you want to expand: " + name, "Expand", JOptionPane.YES_NO_OPTION);
 
             var keep = JOptionPane.showConfirmDialog(frame, "Do you want to keep the archive after expanding?", "Keep Archive", JOptionPane.YES_NO_OPTION);
@@ -839,7 +859,7 @@ public class Main {
                 if (output == null) {
                     return;
                 }
-                output_path = new File(folder, output).toPath();
+                output_path = folder.resolve(output);
                 if (Files.exists(output_path)) {
                     JOptionPane.showConfirmDialog(frame, "Already exists, please pick another name", "Output Exists", JOptionPane.ERROR_MESSAGE);
                 } else {
@@ -849,7 +869,7 @@ public class Main {
 
             if (confirm == JOptionPane.YES_OPTION) {
                 try (
-                    var fis = new BufferedInputStream(new FileInputStream(file));
+                    var fis = new BufferedInputStream(Files.newInputStream(path));
                     var ais = createArchiveInputStream(fis)
                 ) {
                     Files.createDirectories(output_path);
@@ -875,8 +895,11 @@ public class Main {
                 }
 
                 if (keep == JOptionPane.NO_OPTION) {
-                    if (!file.delete()) {
-                        JOptionPane.showMessageDialog(frame, "Failed to delete: " + name, "Error", JOptionPane.ERROR_MESSAGE);
+                    try {
+                        Files.delete(path);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(frame, "Failed to delete archive: " + name + " - " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
 
@@ -887,16 +910,15 @@ public class Main {
 
     private void delete(LoadedFile loaded_file) {
         Thread.ofPlatform().start(() -> {
-            var file = loaded_file.file();
-            var name = file.getName();
+            var path = loaded_file.path();
+            var name = path.toFile().getName();
             if (loaded_file instanceof WorldFile world) {
                 name = world.data().worldName();
             }
             var confirm = JOptionPane.showConfirmDialog(frame, "Are you sure you want to delete: " + name, "Delete", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
                 try {
-                    if (file.isDirectory()) {
-                        var path = file.toPath();
+                    if (Files.isDirectory(path)) {
                         Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
                             @Override
                             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
@@ -911,7 +933,7 @@ public class Main {
                             }
                         });
                     } else {
-                        Files.delete(file.toPath());
+                        Files.delete(path);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -940,7 +962,7 @@ public class Main {
     
                 @Override
                 public Object getTransferData(DataFlavor flavor) {
-                    return List.of(file.file());
+                    return List.of(file.path().toFile());
                 }
             }, null);
         } catch (Exception e) {
@@ -949,10 +971,10 @@ public class Main {
         }
     }
 
-    private void open(File file) {
+    private void open(Path path) {
         Thread.ofVirtual().start(() -> {
             try {
-                Desktop.getDesktop().open(file);
+                Desktop.getDesktop().open(path.toFile());
             } catch (IOException e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(frame, "Failed to open: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

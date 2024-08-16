@@ -3,6 +3,7 @@ package canaryprism.mcwm.swing;
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.Point;
+import java.nio.file.Files;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
@@ -79,7 +80,7 @@ public final class WorldEntry extends WorldListEntry {
         var font = g.getFont();
         g.setFont(font.deriveFont(height / 4f));
 
-        if (!file.file().isDirectory()) {
+        if (!Files.isDirectory(file.path())) {
             g.setColor(Color.yellow);
         }
         
@@ -90,7 +91,7 @@ public final class WorldEntry extends WorldListEntry {
 
         y += y_step / 15;
 
-        g.drawString(file.file().getName() + " " + data.lastPlayed().format(DateTimeFormatter.ofPattern("(uuuu/MM/dd HH:mm)")), x, y += y_step);
+        g.drawString(file.path().toFile().getName() + " " + data.lastPlayed().format(DateTimeFormatter.ofPattern("(uuuu/MM/dd HH:mm)")), x, y += y_step);
 
         y -= y_step / 15;
 

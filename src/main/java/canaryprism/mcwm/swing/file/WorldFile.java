@@ -1,11 +1,12 @@
 package canaryprism.mcwm.swing.file;
 
-import java.io.File;
+import java.nio.file.Path;
+
 import canaryprism.mcwm.saves.WorldData;
 
-public record WorldFile(File file, WorldData data) implements LoadedFile {
+public record WorldFile(Path path, WorldData data) implements LoadedFile {
     public WorldFile {
-        if (file == null) {
+        if (path == null) {
             throw new IllegalArgumentException("file cannot be null");
         }
         if (data == null) {

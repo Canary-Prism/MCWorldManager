@@ -43,7 +43,7 @@ public final class UnknownEntry extends WorldListEntry {
 
         y += y_step / 15;
 
-        g.drawString(file.file().getName(), x, y += y_step);
+        g.drawString(file.path().toFile().getName(), x, y += y_step);
 
         y -= y_step / 15;
     

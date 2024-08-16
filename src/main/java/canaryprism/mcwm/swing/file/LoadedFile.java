@@ -1,7 +1,7 @@
 package canaryprism.mcwm.swing.file;
 
-import java.io.File;
+import java.nio.file.Path;
 
 public sealed interface LoadedFile permits WorldFile, UnknownFile {
-    File file();
+    Path path();
 }
