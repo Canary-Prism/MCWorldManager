@@ -41,7 +41,7 @@ public final class UnknownEntry extends WorldListEntry {
         
         var path = file.path();
         if (Files.isDirectory(path) && Files.exists(path.resolve("level.dat"))) {
-            g.drawString("<Potentially corrupted Minecraft world>", x, y += y_step);
+            g.drawString("<Potentially outdated or corrupted Minecraft world>", x, y += y_step);
         } else {
             g.drawString("<Not a Minecraft world>", x, y += y_step);
         }
