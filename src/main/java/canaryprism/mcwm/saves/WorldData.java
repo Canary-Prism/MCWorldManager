@@ -29,10 +29,14 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
             if (Files.isDirectory(file)) {
                 var level_dat = file.resolve("level.dat");
                 var icon = file.resolve("icon.png");
-                if (Files.exists(icon)) {
-                    return parse(Files.newInputStream(icon), Files.newInputStream(level_dat), file.toFile().getName());
-                } else {
-                    return parse(InputStream.nullInputStream(), Files.newInputStream(level_dat), file.toFile().getName());
+                try {
+                    if (Files.exists(icon)) {
+                        return parse(Files.newInputStream(icon), Files.newInputStream(level_dat), file.toFile().getName());
+                    } else {
+                        return parse(InputStream.nullInputStream(), Files.newInputStream(level_dat), file.toFile().getName());
+                    }
+                } catch (IOException e) {
+                    throw new ParsingException("Failed to read world data", e, "Not a Minecraft world");
                 }
             } else {
                 byte[] imgbuffer = {}, levelbuffer = null;

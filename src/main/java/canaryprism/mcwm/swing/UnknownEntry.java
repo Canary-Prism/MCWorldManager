@@ -42,7 +42,7 @@ public final class UnknownEntry extends WorldListEntry {
             var verdict = e.getVerdict();
             g.drawString("<" + verdict + ">", x, y += y_step);
         } else {
-            g.drawString("<Not a Minecraft world>", x, y += y_step);
+            g.drawString("<Unknown>", x, y += y_step);
         }
 
         g.setColor(Color.white.darker());
