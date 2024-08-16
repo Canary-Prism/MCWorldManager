@@ -58,7 +58,7 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
                         // so it works even if the world is in a subdirectory
                         if (name.equals("level.dat")) {
                             if (found_level) {
-                                throw new ParsingException("Multiple worlds (level.dat) files found in archive");
+                                throw new ParsingException("Multiple worlds (level.dat) files found in archive", "Archive potentially malformed or contains multiple worlds");
                             }
                             found_level = true;
                             levelbuffer = i.readAllBytes();
@@ -95,14 +95,14 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
 
                         return parse(new ByteArrayInputStream(imgbuffer), new ByteArrayInputStream(levelbuffer), dir_name);
                     } else {
-                        throw new ParsingException("No world (level.dat) file found in archive");
+                        throw new ParsingException("No world (level.dat) file found in archive", "Archive potentially malformed or does not contain a world");
                     }
                 }
             } 
         } catch (FileNotFoundException | ArchiveException e) {
-            throw new ParsingException("Failed to parse world data", e);
+            throw new ParsingException("Failed to parse world data", e, "Not a Minecraft world");
         } catch (IOException e) {
-            throw new ParsingException("Failed to read world archive data", e);
+            throw new ParsingException("Failed to read world archive data", e, "Potentially problematic file");
         }
     }
 
@@ -129,12 +129,16 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
 
             var experimental = data.containsKey("enabled_features");
 
-            // i'm not sure if this is the correct way to get the version name
-            var version = data.getCompoundTag("Version").getString("Name");
+            String version;
+            try {
+                version = data.getCompoundTag("Version").getString("Name");
+            } catch (Exception e) {
+                throw new ParsingException("Failed to parse version data", e, "Potentially outdated or corrupted Minecraft world");
+            }
 
             return new WorldData(image, worldName, dir_name, lastPlayed, gamemode, cheats, experimental, version);
         } catch (Exception e) {
-            throw new ParsingException("Malformed level.dat file", e);
+            throw new ParsingException("Malformed level.dat file", e, "Potentially corrupted Minecraft world");
         }
     }
 }
