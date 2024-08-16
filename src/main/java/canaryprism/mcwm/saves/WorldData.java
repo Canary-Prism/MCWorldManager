@@ -3,11 +3,11 @@ package canaryprism.mcwm.saves;
 import java.awt.Image;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -24,15 +24,15 @@ import net.querz.nbt.tag.CompoundTag;
 
 public record WorldData(Optional<Image> image, String worldName, String dirName, LocalDateTime lastPlayed, Gamemode gamemode, boolean cheats, boolean experimental, String version) {
     
-    public static WorldData parse(File file) throws ParsingException {
+    public static WorldData parse(Path file) throws ParsingException {
         try {
-            if (file.isDirectory()) {
-                var level_dat = new File(file, "level.dat");
-                var icon = new File(file, "icon.png");
-                if (icon.exists()) {
-                    return parse(new FileInputStream(icon), new FileInputStream(level_dat), file.getName());
+            if (Files.isDirectory(file)) {
+                var level_dat = file.resolve("level.dat");
+                var icon = file.resolve("icon.png");
+                if (Files.exists(icon)) {
+                    return parse(Files.newInputStream(icon), Files.newInputStream(level_dat), file.toFile().getName());
                 } else {
-                    return parse(InputStream.nullInputStream(), new FileInputStream(level_dat), file.getName());
+                    return parse(InputStream.nullInputStream(), Files.newInputStream(level_dat), file.toFile().getName());
                 }
             } else {
                 byte[] imgbuffer = {}, levelbuffer = null;
@@ -41,7 +41,7 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
                 boolean found_icon = false;
                 var images = new HashMap<String, byte[]>();
                 try (
-                    var fis = new BufferedInputStream(new FileInputStream(file));
+                    var fis = new BufferedInputStream(Files.newInputStream(file));
                     var i = Main.createArchiveInputStream(fis);
                 ) {
                     ArchiveEntry entry = null;
