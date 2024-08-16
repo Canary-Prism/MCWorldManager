@@ -1,6 +1,8 @@
 package canaryprism.mcwm.swing;
 
 import java.awt.Color;
+import java.nio.file.Files;
+
 import canaryprism.mcwm.swing.file.UnknownFile;
 
 public final class UnknownEntry extends WorldListEntry {
@@ -37,7 +39,12 @@ public final class UnknownEntry extends WorldListEntry {
 
         g.setColor(Color.red);
         
-        g.drawString("<Not a Minecraft world>", x, y += y_step);
+        var path = file.path();
+        if (Files.isDirectory(path) && Files.exists(path.resolve("level.dat"))) {
+            g.drawString("<Potentially corrupted Minecraft world>", x, y += y_step);
+        } else {
+            g.drawString("<Not a Minecraft world>", x, y += y_step);
+        }
 
         g.setColor(Color.white.darker());
 

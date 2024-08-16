@@ -458,6 +458,61 @@ public class Main {
             option_buttons_panel.add(panel, SelectedType.unknown.name());
         }
         //#endregion
+        //#region init Unknown with Level Options
+        {
+            var delete_button = new JButton("Delete");
+            delete_button.addActionListener((e) -> {
+                var selected = list.getSelectedValue();
+                delete(selected);
+            });
+            delete_button.setToolTipText("Delete the file forever");
+
+            var error_button = new JButton("Error Details");
+            error_button.addActionListener((e) -> {
+                var selected = list.getSelectedValue();
+                if (selected instanceof UnknownFile unknown) {
+                    Thread.ofVirtual().start(() -> {
+                        var message = getStackTraceAsString(unknown.exception());
+                        JOptionPane.showMessageDialog(frame, message, "Error Details", JOptionPane.ERROR_MESSAGE);
+                    });
+                }
+            });
+            error_button.setToolTipText("View the error details");
+
+            var copy_button = new JButton("Copy");
+            copy_button.addActionListener((e) -> {
+                var selected = list.getSelectedValue();
+                copy(selected);
+            });
+            copy_button.setToolTipText("Copy the file to clipboard");
+
+            var edit_nbt_button = new JButton("Edit NBT Data");
+            edit_nbt_button.addActionListener((e) -> {
+                var selected = list.getSelectedValue();
+                if (selected instanceof UnknownFile file) {
+                    Thread.ofVirtual().start(() -> {
+                        try {
+                            new NBTView(file.path().resolve("level.dat").toFile(), this);
+                        } catch (IOException e1) {
+                            JOptionPane.showMessageDialog(frame, "Failed to open NBT Editor: " + e1.getMessage(),
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    });
+                }
+            });
+            edit_nbt_button.setToolTipText("Advanced: Edit the NBT data of the found level.dat file");
+
+            var panel = new JPanel();
+
+            panel.add(delete_button);
+            panel.add(error_button);
+            panel.add(copy_button);
+
+            panel.add(Box.createHorizontalStrut(50));
+            panel.add(edit_nbt_button);
+
+            option_buttons_panel.add(panel, SelectedType.unknown_with_level.name());
+        }
 
         //#region init None Options
         {
@@ -472,7 +527,7 @@ public class Main {
     private final CardLayout card;
 
     enum SelectedType {
-        none, world, archive, unknown
+        none, world, archive, unknown, unknown_with_level
     }
 
     private void updateOptionsPanel() {
@@ -485,7 +540,11 @@ public class Main {
                 }
             }
             case UnknownFile e -> {
-                card.show(option_buttons_panel, SelectedType.unknown.name());
+                if (Files.isDirectory(e.path()) && Files.exists(e.path().resolve("level.dat"))) {
+                    card.show(option_buttons_panel, SelectedType.unknown_with_level.name());
+                } else {
+                    card.show(option_buttons_panel, SelectedType.unknown.name());
+                }
             }
             case null -> {
                 card.show(option_buttons_panel, SelectedType.none.name());
