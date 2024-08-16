@@ -36,7 +36,7 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
                         return parse(InputStream.nullInputStream(), Files.newInputStream(level_dat), file.toFile().getName());
                     }
                 } catch (IOException e) {
-                    throw new ParsingException("Failed to read world data", e, "Not a Minecraft world");
+                    throw new ParsingException("No world (level.dat) file found in folder", e, "Not a Minecraft world");
                 }
             } else {
                 byte[] imgbuffer = {}, levelbuffer = null;
