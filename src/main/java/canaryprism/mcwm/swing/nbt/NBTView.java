@@ -63,6 +63,27 @@ public class NBTView {
 
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
+        frame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+                var result = JOptionPane.showConfirmDialog(frame, "Do you want to save changes before closing?", "Save Changes", JOptionPane.YES_NO_CANCEL_OPTION);
+
+                if (result == JOptionPane.YES_OPTION) {
+                    try {
+                        save();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        JOptionPane.showMessageDialog(frame, "Failed to save file: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                } else if (result == JOptionPane.CANCEL_OPTION) {
+                    return;
+                }
+
+                close();
+            }
+        });
+
 
         // Create the root node
         this.root = new DefaultMutableTreeNode(nbt);
