@@ -27,6 +27,15 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.6.1
+- sorted world list
+- changed a majority of IO operations to use NIO
+- loading worlds is now non-blocking
+- X button on the NBT editor now does its job
+- duplicating tags that contain other tags now should work properly
+- editing NBT is now allowed on all folders that have a `level.dat`, not just successfully loaded worlds
+- files that failed to load present more useful information
+
 ### 1.6.0
 - added NBT editor
 - fixed formatted text underline and strikethroughs, improved obfuscated (probably, imo)
