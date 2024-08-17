@@ -135,7 +135,7 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
 
             String version;
             try { // because older versions of Minecraft don't have this tag
-                version = data.getCompoundTag("Version").getStringTag("Name").getValue();
+                version = data.getCompoundTag("Version").getStringTag("Name").getValue(); // throw a goddamn exception it's not that fucking hard
             } catch (Exception e) {
                 throw new ParsingException("Failed to parse version data", e, "Potentially outdated or corrupted Minecraft world");
             }
