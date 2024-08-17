@@ -122,26 +122,29 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
 
             var data = ((CompoundTag)level_dat.getTag()).getCompoundTag("Data");
 
-            var worldName = data.getString("LevelName");
-            var lastPlayed = LocalDateTime.ofInstant(Instant.ofEpochMilli(data.getLong("LastPlayed")), ZoneId.systemDefault());
+            var worldName = data.getStringTag("LevelName").getValue();
+            var lastPlayed = LocalDateTime.ofInstant(Instant.ofEpochMilli(data.getLongTag("LastPlayed").asLong()), ZoneId.systemDefault());
             
-            var gamemode = Gamemode.fromIndex(data.getInt("GameType"));
-            if (data.getBoolean("hardcore")) {
+            var gamemode = Gamemode.fromIndex(data.getIntTag("GameType").asInt());
+            if (data.getByteTag("hardcore").asBoolean()) {
                 gamemode = Gamemode.hardcore;
             }
-            var cheats = data.getBoolean("allowCommands");
+            var cheats = data.getByteTag("allowCommands").asBoolean();
 
             var experimental = data.containsKey("enabled_features");
 
             String version;
-            try {
-                version = data.getCompoundTag("Version").getString("Name");
+            try { // because older versions of Minecraft don't have this tag
+                version = data.getCompoundTag("Version").getStringTag("Name").getValue();
             } catch (Exception e) {
                 throw new ParsingException("Failed to parse version data", e, "Potentially outdated or corrupted Minecraft world");
             }
 
             return new WorldData(image, worldName, dir_name, lastPlayed, gamemode, cheats, experimental, version);
         } catch (Exception e) {
+            if (e instanceof ParsingException n) {
+                throw n;
+            }
             throw new ParsingException("Malformed level.dat file", e, "Potentially corrupted Minecraft world");
         }
     }
