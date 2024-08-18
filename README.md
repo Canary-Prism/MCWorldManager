@@ -27,6 +27,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 1.6.2
+- lots of bugfixes, some of them my fault, some of them the fault of this other person and their hateful NBT library
+
 ### 1.6.1
 - sorted world list
 - changed a majority of IO operations to use NIO
