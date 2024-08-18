@@ -473,7 +473,7 @@ public class NBTView {
     // public void load(NBTNode<?> node) {
     //     load(node, node.getTag());
     // }
-    public void load(DefaultMutableTreeNode node) {
+    public static void load(DefaultMutableTreeNode node) {
         var o = node.getUserObject();
         if (o instanceof NamedTag named_tag) {
             o = named_tag.getTag();
@@ -515,17 +515,17 @@ public class NBTView {
         }
     }
 
-    public Object reconstructNbt(Object o, DefaultMutableTreeNode node) {
+    public static Object reconstructNbt(Object o, DefaultMutableTreeNode node) {
         return switch (o) {
             case NamedTag named_tag -> reconstructNbt(named_tag, node);
             case Tag<?> tag -> reconstructNbt(tag, node);
             default -> throw new IllegalArgumentException("Cannot reconstruct " + o.getClass().getSimpleName());
         };
     }
-    public NamedTag reconstructNbt(NamedTag tag, DefaultMutableTreeNode node) {
+    public static NamedTag reconstructNbt(NamedTag tag, DefaultMutableTreeNode node) {
         return new NamedTag(tag.getName(), reconstructNbt(tag.getTag(), node));
     }
-    public Tag<?> reconstructNbt(Tag<?> tag, DefaultMutableTreeNode node) {
+    public static Tag<?> reconstructNbt(Tag<?> tag, DefaultMutableTreeNode node) {
         return switch (tag) {
             case CompoundTag compound_tag -> {
                 var new_tag = new CompoundTag();
@@ -537,9 +537,8 @@ public class NBTView {
                 yield new_tag;
             }
             case ListTag<?> list_tag -> {
-                @SuppressWarnings("unchecked")
-                var new_tag = (ListTag<Tag<?>>)list_tag.clone();
-                list_tag.clear();
+                @SuppressWarnings({"rawtypes", "unchecked"})
+                var new_tag = (ListTag<Tag<?>>)new ListTag(list_tag.getTypeClass());
                 for (var i = 0; i < node.getChildCount(); ++i) {
                     var child = (DefaultMutableTreeNode) node.getChildAt(i);
                     new_tag.add(reconstructNbt((Tag<?>) child.getUserObject(), child));

@@ -142,7 +142,10 @@ public class NBTTreeTransferHandler extends TransferHandler {
     /** Defensive copy used in createTransferable. */
     private DefaultMutableTreeNode copy(TreeNode node) {
         if (node instanceof DefaultMutableTreeNode n) {
-            return new DefaultMutableTreeNode(n.getUserObject());
+            var node_tree = NBTView.reconstructNbt(n.getUserObject(), n);
+            var new_node = new DefaultMutableTreeNode(node_tree);
+            NBTView.load(new_node);
+            return new_node;
         } else {
             return new DefaultMutableTreeNode(node);
         }
