@@ -118,13 +118,6 @@ public class Main {
         Path saves_path;
         if (has_save.size() == 0) {
             saves_path = openDialog().orElseThrow();
-        } else if (has_save.size() == 1) {
-            saves_path = pickInstance(has_save.get(0).getSavesPaths(), null)
-                .exceptionally((_) -> {
-                    System.exit(-1); // i guess
-                    return null;
-                })
-                .join();
         } else {
             saves_path = pickLauncher(has_save)
                 .exceptionally((_) -> {
