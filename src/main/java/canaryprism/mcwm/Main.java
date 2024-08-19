@@ -202,9 +202,10 @@ public class Main {
 
         var custom_button = new JButton("Custom Folder");
         custom_button.addActionListener((e) -> {
-            var path = openDialog().orElseThrow();
-            dialog.dispose();
-            future.complete(path);
+            openDialog().ifPresent((path) -> {
+                dialog.dispose();
+                future.complete(path);
+            });
         });
 
         dialog.add(custom_button, BorderLayout.SOUTH);
