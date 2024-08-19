@@ -27,6 +27,12 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.0.0
+- added multiple launcher and instance support (this is just that there is now a way of supporting these, each launcher needs to be handled on a per launcher basis)
+- Vanilla launcher is now an option in the launchers
+- added MultiMC launcher support (Mac only for now (because the directory is *somewhat* standard i think idk))
+- fixed just... **so** many InputStream resource leaks
+
 ### 1.6.2
 - lots of bugfixes, some of them my fault, some of them the fault of this other person and their hateful NBT library
 
