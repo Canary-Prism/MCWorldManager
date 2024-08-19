@@ -33,6 +33,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -53,6 +54,10 @@ import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 
+import canaryprism.mcwm.savedir.SaveDirectory;
+import canaryprism.mcwm.savedir.SaveFinder;
+import canaryprism.mcwm.savedir.launcher.MultiMC;
+import canaryprism.mcwm.savedir.launcher.Vanilla;
 import canaryprism.mcwm.saves.ParsingException;
 import canaryprism.mcwm.saves.WorldData;
 import canaryprism.mcwm.swing.WorldListEntry;
@@ -60,6 +65,8 @@ import canaryprism.mcwm.swing.file.LoadedFile;
 import canaryprism.mcwm.swing.file.UnknownFile;
 import canaryprism.mcwm.swing.file.WorldFile;
 import canaryprism.mcwm.swing.nbt.NBTView;
+import canaryprism.mcwm.swing.savedir.SaveDirectoryView;
+import canaryprism.mcwm.swing.savedir.SaveFinderView;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -73,6 +80,8 @@ import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
 import static java.nio.file.StandardWatchEventKinds.*;
 
@@ -86,48 +95,215 @@ public class Main {
     public static final String VERSION = "1.6.2";
 
     public static void main(String[] args) throws IOException {
-        var saves_directory = "";
+
+        final var save_finders = List.of(
+            new Vanilla(),
+            new MultiMC()
+        );
+
         // here, we assign the name of the OS, according to Java, to a variable...
         String OS = (System.getProperty("os.name")).toUpperCase();
         if (OS.contains("WIN")) {
-            saves_directory = System.getenv("AppData") + "/.minecraft";
+            save_finders.forEach(SaveFinder::findWindows);
         } else if (OS.contains("MAC")) {
-            saves_directory = System.getProperty("user.home") + "/Library/Application Support/minecraft";
+            save_finders.forEach(SaveFinder::findMac);
         } else { // we'll just assume Linux or something else
-            saves_directory = System.getProperty("user.home") + "/.minecraft";
+            save_finders.forEach(SaveFinder::findLinux);
         }
-        saves_directory += "/saves";
 
-        var saves = new File(saves_directory);
+        var has_save = save_finders.stream().filter(e -> !e.getSavesPaths().isEmpty()).toList();
 
         FlatMacDarkLaf.setup();
 
+        Path saves_path;
+        if (has_save.size() == 0) {
+            saves_path = openDialog().orElseThrow();
+        } else if (has_save.size() == 1) {
+            saves_path = pickInstance(has_save.get(0).getSavesPaths(), null)
+                .exceptionally((_) -> {
+                    System.exit(-1); // i guess
+                    return null;
+                })
+                .join();
+        } else {
+            saves_path = pickLauncher(has_save)
+                .exceptionally((_) -> {
+                    System.exit(-1); // i guess
+                    return null;
+                })
+                .join();
+        }
+
+
+        try {
+            new Main(saves_path).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Fatal Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private static CompletableFuture<Path> pickLauncher(List<SaveFinder> finders) {
+        var dialog = new JDialog((JDialog) null, "Select Minecraft Launcher");
+
+        var future = new CompletableFuture<Path>();
+
+        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+
+        dialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                dialog.dispose();
+                future.cancel(true);
+            }
+        });
+
+        var launcher_list = new JList<SaveFinder>();
+        launcher_list.setListData(finders.toArray(SaveFinder[]::new));
+
+        launcher_list.setCellRenderer((list, value, index, selected, cellHasFocus) -> {
+            var entry = new SaveFinderView(value);
+            entry.setPreferredSize(new Dimension(400, 40));
+            var panel = new JPanel(new BorderLayout());
+            panel.add(entry, BorderLayout.CENTER);
+
+            panel.setBorder(new LineBorder(Color.gray, 2));
+
+            return panel;
+        });
+
+        launcher_list.setFocusable(false);
+        launcher_list.setSelectedValue(null, false);
+
+        launcher_list.addListSelectionListener((e) -> {
+            if (e.getValueIsAdjusting()) {
+                return;
+            }
+            var selected = launcher_list.getSelectedValue();
+            if (selected != null) {
+                var instances = selected.getSavesPaths();
+                if (instances.size() == 1) {
+                    dialog.dispose();
+                    future.complete(instances.get(0).path());
+                } else {
+                    pickInstance(instances, dialog)
+                    .thenAccept((path) -> {
+                        dialog.dispose();
+                        future.complete(path);
+                    })
+                    .exceptionally((_) -> null);
+                }
+            }
+        });
+
+        var scroll_pane = new JScrollPane(launcher_list);
+
+        {
+            var pref_size = launcher_list.getPreferredSize();
+            pref_size.height = Math.min(pref_size.height, 500);
+            scroll_pane.getViewport().setPreferredSize(pref_size);
+        }
+
+        dialog.add(scroll_pane);
+
+
+        var custom_button = new JButton("Custom Folder");
+        custom_button.addActionListener((e) -> {
+            var path = openDialog().orElseThrow();
+            dialog.dispose();
+            future.complete(path);
+        });
+
+        dialog.add(custom_button, BorderLayout.SOUTH);
+
+        dialog.pack();
+        dialog.setResizable(false);
+        dialog.setVisible(true);
+
+        return future;
+    }
+
+    private static CompletableFuture<Path> pickInstance(List<SaveDirectory> instances, JDialog owner) {
+        var dialog = new JDialog(owner, "Select Instance");
+
+        var future = new CompletableFuture<Path>();
+
+        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+
+        dialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                dialog.dispose();
+                future.cancel(true);
+            }
+        });
+
+        var instance_list = new JList<SaveDirectory>();
+        instance_list.setListData(instances.toArray(SaveDirectory[]::new));
+
+        instance_list.setCellRenderer((list, value, index, selected, cellHasFocus) -> {
+            var entry = new SaveDirectoryView(value);
+            entry.setPreferredSize(new Dimension(300, 30));
+            var panel = new JPanel(new BorderLayout());
+            panel.add(entry, BorderLayout.CENTER);
+
+            panel.setBorder(new LineBorder(Color.gray, 2));
+
+            return panel;
+        });
+
+        instance_list.setFocusable(false);
+        instance_list.setSelectedValue(null, false);
+
+        instance_list.addListSelectionListener((e) -> {
+            if (e.getValueIsAdjusting()) {
+                return;
+            }
+            var selected = instance_list.getSelectedValue();
+            if (selected != null) {
+                dialog.dispose();
+                future.complete(selected.path());
+            }
+        });
+
+        var scroll_pane = new JScrollPane(instance_list);
+
+        {
+            var pref_size = instance_list.getPreferredSize();
+            pref_size.height = Math.min(pref_size.height, 500);
+            scroll_pane.getViewport().setPreferredSize(pref_size);
+        }
+
+        dialog.add(scroll_pane);
+        dialog.pack();
+        dialog.setResizable(false);
+        dialog.setVisible(true);
+
+        return future;
+    }
+
+    private static Optional<Path> openDialog() {
         var fc = new JFileChooser();
         fc.setDialogTitle("Select Minecraft Saves Folder");
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         fc.setFileHidingEnabled(false);
 
-        while (!saves.exists()) {
+        File saves = null;
+
+        while (saves == null || !saves.exists()) {
             var input = fc.showOpenDialog(null);
             if (input != JFileChooser.APPROVE_OPTION) {
-                return;
+                return Optional.empty();
             }
             saves = fc.getSelectedFile();
             if (saves.exists() && saves.isDirectory()) {
-                if (saves.getName().contains("minecraft") && new File(saves, "saves").exists() && new File(saves, "saves").isDirectory()) {
+                if (saves.getName().contains("minecraft") && new File(saves, "saves").exists()) {
                     saves = new File(saves, "saves");
                 }
                 break;
             }
         }
-
-
-        try {
-            new Main(saves.toPath()).show();
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Fatal Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        return Optional.of(saves.toPath());
     }
     public static String getStackTraceAsString(Throwable throwable) {
         StringWriter stringWriter = new StringWriter();
@@ -652,7 +828,7 @@ public class Main {
                 return Stream.of(new WorldFile(path, WorldData.parse(path)));
             } catch (ParsingException e) {
                 JOptionPane.showMessageDialog(frame,
-                        path.toFile().getName() + " is not a Minecraft world: " + e.getMessage(), "Error",
+                        path.getFileName() + " is not a Minecraft world: " + e.getMessage(), "Error",
                         JOptionPane.ERROR_MESSAGE);
                 return Stream.empty();
             }
@@ -700,7 +876,7 @@ public class Main {
             var input = world.path();
             Path output;
             if (Files.isDirectory(input)) {
-                output = folder.resolve(input.toFile().getName());
+                output = folder.resolve(input.getFileName());
             } else {
                 output = folder.resolve(data.dirName());
             }
@@ -910,7 +1086,7 @@ public class Main {
     private void expand(WorldFile loaded_file) {
         Thread.ofPlatform().start(() -> {
             var path = loaded_file.path();
-            var name = path.toFile().getName();
+            var name = path.getFileName().toString();
             var confirm = JOptionPane.showConfirmDialog(frame, "Are you sure you want to expand: " + name, "Expand", JOptionPane.YES_NO_OPTION);
 
             var keep = JOptionPane.showConfirmDialog(frame, "Do you want to keep the archive after expanding?", "Keep Archive", JOptionPane.YES_NO_OPTION);
@@ -973,7 +1149,7 @@ public class Main {
     private void delete(LoadedFile loaded_file) {
         Thread.ofPlatform().start(() -> {
             var path = loaded_file.path();
-            var name = path.toFile().getName();
+            var name = path.getFileName().toString();
             if (loaded_file instanceof WorldFile world) {
                 name = world.data().worldName();
             }
