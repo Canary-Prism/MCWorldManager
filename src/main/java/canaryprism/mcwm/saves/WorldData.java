@@ -31,9 +31,16 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
                 var icon = file.resolve("icon.png");
                 try {
                     if (Files.exists(icon)) {
-                        return parse(Files.newInputStream(icon), Files.newInputStream(level_dat), file.toFile().getName());
+                        try (
+                            var icon_stream = Files.newInputStream(icon);
+                            var level_dat_stream = Files.newInputStream(level_dat)
+                        ) {
+                            return parse(icon_stream, level_dat_stream, file.toFile().getName());
+                        }
                     } else {
-                        return parse(InputStream.nullInputStream(), Files.newInputStream(level_dat), file.toFile().getName());
+                        try (var level_dat_stream = Files.newInputStream(level_dat)) {
+                            return parse(InputStream.nullInputStream(), level_dat_stream, file.toFile().getName());
+                        }
                     }
                 } catch (IOException e) {
                     throw new ParsingException("No world (level.dat) file found in folder", e, "Not a Minecraft world");
