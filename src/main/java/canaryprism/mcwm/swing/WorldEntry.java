@@ -16,8 +16,8 @@ public final class WorldEntry extends WorldListEntry {
 
     private static final Image default_icon;
     static {
-        try {
-            default_icon = ImageIO.read(WorldEntry.class.getResourceAsStream("/mcwm/default_world_icon.png"));
+        try (var is = WorldEntry.class.getResourceAsStream("/mcwm/default_world_icon.png")) {
+            default_icon = ImageIO.read(is);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load default world icon", e);
         }
