@@ -104,7 +104,12 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
                             }
                         }
 
-                        return parse(new ByteArrayInputStream(imgbuffer), new ByteArrayInputStream(levelbuffer), dir_name);
+                        try (
+                            var imgstream = new ByteArrayInputStream(imgbuffer);
+                            var levelstream = new ByteArrayInputStream(levelbuffer);
+                        ) {
+                            return parse(imgstream, levelstream, dir_name);
+                        }
                     } else {
                         throw new ParsingException("No world (level.dat) file found in archive", "Archive potentially malformed or does not contain a world");
                     }
