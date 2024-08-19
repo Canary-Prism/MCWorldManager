@@ -562,19 +562,22 @@ public class Main {
     
                 var ex = Executors.newVirtualThreadPerTaskExecutor();
     
-                var futures = Files.list(folder).map((path) -> CompletableFuture.runAsync(() -> {
-                    try {
-                        var file = new WorldFile(path, WorldData.parse(path));
-                        synchronized (ex) {
-                            worlds.add(file);
+                List<CompletableFuture<Void>> futures; 
+                try (var stream = Files.list(folder)) {
+                    futures = stream.map((path) -> CompletableFuture.runAsync(() -> {
+                        try {
+                            var file = new WorldFile(path, WorldData.parse(path));
+                            synchronized (ex) {
+                                worlds.add(file);
+                            }
+                        } catch (ParsingException e) {
+                            var file = new UnknownFile(path, e);
+                            synchronized (ex) {
+                                worlds.add(file);
+                            }
                         }
-                    } catch (ParsingException e) {
-                        var file = new UnknownFile(path, e);
-                        synchronized (ex) {
-                            worlds.add(file);
-                        }
-                    }
-                }, ex)).toList();
+                    }, ex)).toList();
+                }
     
                 CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
     
