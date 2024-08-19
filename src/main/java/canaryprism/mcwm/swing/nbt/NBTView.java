@@ -673,7 +673,7 @@ public class NBTView {
                 ok_button.addActionListener((e) -> {
                     var name = name_field.getText();
                     var type = (TagType) type_box.getSelectedItem();
-                    var new_tag = switch (type) {
+                    Tag<?> new_tag = switch (type) {
                         case compound -> new CompoundTag();
                         case list -> {
                             var container_type = (TagType) container_type_box.getSelectedItem();
