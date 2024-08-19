@@ -35,11 +35,11 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
                             var icon_stream = Files.newInputStream(icon);
                             var level_dat_stream = Files.newInputStream(level_dat)
                         ) {
-                            return parse(icon_stream, level_dat_stream, file.toFile().getName());
+                            return parse(icon_stream, level_dat_stream, file.getFileName().toString());
                         }
                     } else {
                         try (var level_dat_stream = Files.newInputStream(level_dat)) {
-                            return parse(InputStream.nullInputStream(), level_dat_stream, file.toFile().getName());
+                            return parse(InputStream.nullInputStream(), level_dat_stream, file.getFileName().toString());
                         }
                     }
                 } catch (IOException e) {
