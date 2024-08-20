@@ -29,6 +29,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.0.1
+- you're now allowed to select a custom directory even if only 1 launcher was found
+- stopped swallowing some exceptions and actually print them to stderr
+
 ### 2.0.0
 - added multiple launcher and instance support (this is just that there is now a way of supporting these, each launcher needs to be handled on a per launcher basis)
 - Vanilla launcher is now an option in the launchers
