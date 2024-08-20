@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 
 import javax.imageio.ImageIO;
 
@@ -56,6 +57,7 @@ public class MultiMC implements SaveFinder {
 
 
         final var future = new CompletableFuture<Path>();
+        var countdown = new CountDownLatch(targets.size());
 
         for (var target : targets) {
             Thread.ofVirtual().start(() -> {
@@ -64,25 +66,21 @@ public class MultiMC implements SaveFinder {
         
                         final int max_depth = 2;
                         int depth = 0;
-        
+
                         @Override
-                        public FileVisitResult visitFile(Path path, java.nio.file.attribute.BasicFileAttributes attrs) {
-                            if (Files.isDirectory(path) 
-                                && Files.isRegularFile(path.resolve("MultiMC.exe"))
-                                && Files.isDirectory(path.resolve("instances"))) {
-
-                                future.complete(path.resolve("instances"));
-
+                        public FileVisitResult preVisitDirectory(Path dir, java.nio.file.attribute.BasicFileAttributes attrs) {
+                            if (Files.isDirectory(dir) 
+                                && Files.isRegularFile(dir.resolve("MultiMC.exe"))
+                                && Files.isDirectory(dir.resolve("instances"))) {
+    
+                                future.complete(dir.resolve("instances"));
+    
                                 return java.nio.file.FileVisitResult.TERMINATE;
                             }
                             if (future.isDone()) {
                                 return java.nio.file.FileVisitResult.TERMINATE;
                             }
-                            return java.nio.file.FileVisitResult.CONTINUE;
-                        }
-        
-                        @Override
-                        public FileVisitResult preVisitDirectory(Path dir, java.nio.file.attribute.BasicFileAttributes attrs) {
+
                             if (depth >= max_depth) {
                                 return java.nio.file.FileVisitResult.SKIP_SUBTREE;
                             }
@@ -99,10 +97,26 @@ public class MultiMC implements SaveFinder {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                countdown.countDown();
             });
         }
 
-        var instances = future.join();
+        Thread.ofVirtual().start(() -> {
+            try {
+                countdown.await();
+                future.completeExceptionally(new RuntimeException("MultiMC not found"));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        Path instances;
+        try {
+            instances = future.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
 
         // the rest is the same as Mac (or at least i'm assuming)
 
