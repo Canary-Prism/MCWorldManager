@@ -194,7 +194,7 @@ public class MultiMC implements SaveFinder {
 
     @Override
     public String getLauncherName() {
-        return "MultiMC Launcher <WIP>";
+        return "MultiMC";
     }
 
     @Override
