@@ -4,6 +4,8 @@ a thing for importing, exporting, and just managing Minecraft Java Edition world
 
 totally didn't just make this because i got tired of hearing people ask how to do this one very basic thing about minecraft
 
+for more information about different launchers and their support see [Launchers.md](https://github.com/Canary-Prism/MCWorldManager/blob/main/Launchers.md)
+
 ### [Download](https://github.com/Canary-Prism/MCWorldManager/releases/)
 
 I'm assuming you know how to use GitHub. If not then here:
