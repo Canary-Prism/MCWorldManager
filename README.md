@@ -29,6 +29,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.0.3
+- added MultiMC support for windows (kinda), see Launchers.md for more details
+
 ### 2.0.2
 - forgot to close my InputStream ***again*** (this probably isn't a big enough deal to warrant a new release but whatever)
 
