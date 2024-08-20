@@ -29,6 +29,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.1.0
+- added Prism Launcher support for Mac, Windows (mostly), and Linux (kinda)
+- renamed MultiMC launcher name
+
 ### 2.0.3
 - added MultiMC support for windows (kinda), see Launchers.md for more details
 
