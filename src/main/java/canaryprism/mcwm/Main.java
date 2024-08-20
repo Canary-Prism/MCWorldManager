@@ -57,6 +57,7 @@ import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import canaryprism.mcwm.savedir.SaveDirectory;
 import canaryprism.mcwm.savedir.SaveFinder;
 import canaryprism.mcwm.savedir.launcher.MultiMC;
+import canaryprism.mcwm.savedir.launcher.Prism;
 import canaryprism.mcwm.savedir.launcher.Vanilla;
 import canaryprism.mcwm.saves.ParsingException;
 import canaryprism.mcwm.saves.WorldData;
@@ -98,6 +99,7 @@ public class Main {
 
         final var save_finders = List.of(
             new Vanilla(),
+            new Prism(),
             new MultiMC()
         );
 
