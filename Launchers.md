@@ -14,5 +14,8 @@ fully supported on all platforms (you'd hope so i guess :p)
 - Mac: Supported
     - assumes you put your MultiMC.app in your Applications folder (user or root)
     - i'm honestly not sure if this assumption is reasonable
-- Windows: NOT Supported
+- Windows: Kinda Supported (untested)
+    - assumes you put your MultiMC.exe somewhere in Downloads, Documents, or Desktop, and is only nested at most 2 folders deep
+    - if you have multiple instances of MultiMC in your computer only the one that happens to get detected first 
+    - i also worry that this will be slow as fuck especially on older computers 
 - Linux: NOT Supported
