@@ -2,11 +2,14 @@ package canaryprism.mcwm.savedir.launcher;
 
 import java.awt.Image;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import javax.imageio.ImageIO;
 
@@ -43,7 +46,89 @@ public class MultiMC implements SaveFinder {
 
     @Override
     public synchronized void findWindows() {
-        // TODO: implement windows
+        // i'll just try to find it by searching in downloads documents and desktop
+        // since multimc doesn't have an actual working directory not relative to its exe
+        // and there isn't a standard place to put multimc in windows
+
+        var home = System.getProperty("user.home");
+
+        var targets = List.of(Path.of(home, "Downloads"), Path.of(home, "Documents"), Path.of(home, "Desktop"));
+
+
+        final var future = new CompletableFuture<Path>();
+
+        for (var target : targets) {
+            Thread.ofVirtual().start(() -> {
+                try {
+                    Files.walkFileTree(target, new SimpleFileVisitor<>() {
+        
+                        final int max_depth = 2;
+                        int depth = 0;
+        
+                        @Override
+                        public FileVisitResult visitFile(Path path, java.nio.file.attribute.BasicFileAttributes attrs) {
+                            if (Files.isDirectory(path) 
+                                && Files.isRegularFile(path.resolve("MultiMC.exe"))
+                                && Files.isDirectory(path.resolve("instances"))) {
+
+                                future.complete(path.resolve("instances"));
+
+                                return java.nio.file.FileVisitResult.TERMINATE;
+                            }
+                            if (future.isDone()) {
+                                return java.nio.file.FileVisitResult.TERMINATE;
+                            }
+                            return java.nio.file.FileVisitResult.CONTINUE;
+                        }
+        
+                        @Override
+                        public FileVisitResult preVisitDirectory(Path dir, java.nio.file.attribute.BasicFileAttributes attrs) {
+                            if (depth >= max_depth) {
+                                return java.nio.file.FileVisitResult.SKIP_SUBTREE;
+                            }
+                            depth++;
+                            return java.nio.file.FileVisitResult.CONTINUE;
+                        }
+        
+                        @Override
+                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                            depth--;
+                            return java.nio.file.FileVisitResult.CONTINUE;
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        var instances = future.join();
+
+        // the rest is the same as Mac (or at least i'm assuming)
+
+        try {
+            Files.list(instances)
+                .filter(Files::isDirectory)
+                .filter((e) -> Files.isDirectory(e.resolve(".minecraft")))
+                .map((e) -> {
+                    try {
+                        return new SaveDirectory(
+                            Optional.of(ImageIO.read(e.resolve(".minecraft", "icon.png").toFile())), 
+                            e.getFileName().toString(), 
+                            e.resolve(".minecraft", "saves")
+                        );
+                    } catch (IOException ex) {
+                        return new SaveDirectory(
+                            default_world_icon, 
+                            e.getFileName().toString(), 
+                            e.resolve(".minecraft", "saves")
+                        );
+                    }
+                })
+                .forEach(saves_path::add);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
