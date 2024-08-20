@@ -18,8 +18,8 @@ public class MultiMC implements SaveFinder {
     private static final Optional<Image> icon;
     static {
         Optional<Image> temp_icon;
-        try {
-            temp_icon = Optional.ofNullable(ImageIO.read(Vanilla.class.getResourceAsStream("/mcwm/launcher/multimc.png")));
+        try (var is = MultiMC.class.getResourceAsStream("/mcwm/launcher/multimc.png")) {
+            temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
             temp_icon = Optional.empty();
@@ -30,9 +30,8 @@ public class MultiMC implements SaveFinder {
     private static final Optional<Image> default_world_icon;
     static {
         Optional<Image> temp_icon;
-        try {
-            temp_icon = Optional
-                    .ofNullable(ImageIO.read(Vanilla.class.getResourceAsStream("/mcwm/grass.png")));
+        try (var is = MultiMC.class.getResourceAsStream("/mcwm/grass.png")) {
+            temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
             temp_icon = Optional.empty();
