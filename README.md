@@ -29,6 +29,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.0.2
+- forgot to close my InputStream ***again*** (this probably isn't a big enough deal to warrant a new release but whatever)
+
 ### 2.0.1
 - you're now allowed to select a custom directory even if only 1 launcher was found
 - stopped swallowing some exceptions and actually print them to stderr
