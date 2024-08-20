@@ -20,6 +20,7 @@ public class Vanilla implements SaveFinder {
         try {
             temp_icon = Optional.ofNullable(ImageIO.read(Vanilla.class.getResourceAsStream("/mcwm/launcher/vanilla.png")));
         } catch (Exception e) {
+            e.printStackTrace(); // swallowing exceptions is bad
             temp_icon = Optional.empty();
         }
         icon = temp_icon;
