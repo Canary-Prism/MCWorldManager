@@ -75,7 +75,7 @@ public class Modrinth implements SaveFinder {
         if (Files.isDirectory(instances)) {
             try {
                 Files.list(instances)
-                    .filter(Files::isDirectory)
+                    .filter((e) -> Files.isDirectory(e.resolve("saves")))
                     .map((e) -> {
                         try {
                             return new SaveDirectory(

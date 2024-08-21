@@ -247,7 +247,7 @@ public class Prism implements SaveFinder {
         try {
             Files.list(instances)
                 .filter(Files::isDirectory)
-                .filter((e) -> Files.isDirectory(e.resolve(".minecraft")))
+                .filter((e) -> Files.isDirectory(e.resolve(".minecraft", "saves")))
                 .map((e) -> {
                     try {
                         return new SaveDirectory(
