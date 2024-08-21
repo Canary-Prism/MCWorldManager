@@ -38,6 +38,7 @@ import net.querz.nbt.tag.ByteArrayTag;
 import net.querz.nbt.tag.ByteTag;
 import net.querz.nbt.tag.CompoundTag;
 import net.querz.nbt.tag.DoubleTag;
+import net.querz.nbt.tag.EndTag;
 import net.querz.nbt.tag.FloatTag;
 import net.querz.nbt.tag.IntArrayTag;
 import net.querz.nbt.tag.IntTag;
@@ -165,6 +166,27 @@ public class NBTView {
                         }
                         for (var path : selected) {
                             var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
+
+                            // change the list tag to the correct type if it was of type EndTag
+                            {
+                                var user_object = parent.getUserObject();
+                                var named = false;
+                                if (user_object instanceof NamedTag named_tag) {
+                                    user_object = named_tag.getTag();
+                                    named = true;
+                                }
+                                if (user_object instanceof ListTag<?> list_tag) {
+                                    if (list_tag.getTypeClass() == EndTag.class) {
+                                        @SuppressWarnings({ "unchecked", "rawtypes" })
+                                        Object new_list = new ListTag(new_tag.getClass());
+                                        if (named) {
+                                            new_list = new NamedTag(((NamedTag) parent.getUserObject()).getName(), (Tag<?>)new_list);
+                                        }
+                                        parent.setUserObject(new_list);
+                                    }
+                                }
+                            }
+
                             parent.add(new DefaultMutableTreeNode(clone(new_tag)));
                             treeModel.reload(parent);
                         }
@@ -743,6 +765,77 @@ public class NBTView {
                     dialog.setContentPane(panel);
                     dialog.pack();
                     dialog.setVisible(true);
+                    dialog.addComponentListener(new ComponentAdapter() {
+                        @Override
+                        public void componentHidden(java.awt.event.ComponentEvent e) {
+                            future.cancel(false);
+                        }
+                    });
+
+                    result = future.handle((e, t) -> {
+                        dialog.dispose();
+                        if (t != null)
+                            throw unchecked(t);
+                        return e;
+                    }).join();
+                } else if (type == EndTag.class) {
+                    // you'll be able to add any tag to this list
+                    var dialog = new JDialog(frame);
+                    var future = new CompletableFuture<Object>();
+
+                    var panel = new JPanel();
+                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+                    panel.setBorder(new EmptyBorder(5, 5, 5, 5));
+
+                    var container_type_box = new JComboBox<TagType>();
+                    container_type_box.setEnabled(false);
+
+                    var type_box = new JComboBox<TagType>(TagType.values());
+                    type_box.addActionListener((e) -> {
+                        var selected_type = (TagType) type_box.getSelectedItem();
+                        if (selected_type == TagType.list) {
+                            container_type_box.setModel(new DefaultComboBoxModel<>(TagType.values()));
+                            container_type_box.setEnabled(true);
+                        } else {
+                            container_type_box.setEnabled(false);
+                            container_type_box.setModel(new DefaultComboBoxModel<>());
+                        }
+                    });
+
+                    panel.add(type_box);
+                    panel.add(container_type_box);
+
+                    var ok_button = new JButton("OK");
+                    ok_button.addActionListener((e) -> {
+                        var selected_type = (TagType) type_box.getSelectedItem();
+                        Tag<?> new_tag = switch (selected_type) {
+                            case compound -> new CompoundTag();
+                            case list -> {
+                                var container_type = (TagType) container_type_box.getSelectedItem();
+                                var contain_type = container_type.getTypeClass();
+                                @SuppressWarnings({ "unchecked", "rawtypes" })
+                                var tag = new ListTag(contain_type);
+                                yield tag;
+                            }
+                            case int_array -> new IntArrayTag();
+                            case long_array -> new LongArrayTag();
+                            case byte_array -> new ByteArrayTag();
+                            case byte_ -> new ByteTag();
+                            case double_ -> new DoubleTag();
+                            case float_ -> new FloatTag();
+                            case int_ -> new IntTag();
+                            case long_ -> new LongTag();
+                            case short_ -> new ShortTag();
+                            case string_ -> new StringTag();
+                        };
+                        future.complete(new_tag);
+                    });
+                    panel.add(ok_button);
+
+                    dialog.setContentPane(panel);
+                    dialog.pack();
+                    dialog.setVisible(true);
+
                     dialog.addComponentListener(new ComponentAdapter() {
                         @Override
                         public void componentHidden(java.awt.event.ComponentEvent e) {
