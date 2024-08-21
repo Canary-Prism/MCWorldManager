@@ -12,9 +12,9 @@ fully supported on all platforms (you'd hope so i guess :p)
 
 ### Prism Launcher
 - Mac: Supported
-- Windows: Mostly Supported (untested)
+- Windows: Mostly Supported
     - supports the default installer
-    - supports the Scoop package manager
+    - supports the Scoop package manager (untested)
     - for portables, it assumes you put your prismlauncher.exe somewhere in Downloads, Documents, or Desktop, and is only nested at most 2 folders deep
     - if you have multiple instances of Prism Launcher in your computer only the one that happens to get detected first is used
 - Linux: Kinda Supported (untested)
@@ -28,8 +28,16 @@ fully supported on all platforms (you'd hope so i guess :p)
 - Mac: Supported
     - assumes you put your MultiMC.app in your Applications folder (user or root)
     - i'm honestly not sure if this assumption is reasonable
-- Windows: Kinda Supported (untested)
+- Windows: Kinda Supported
     - assumes you put your MultiMC.exe somewhere in Downloads, Documents, or Desktop, and is only nested at most 2 folders deep
     - if you have multiple instances of MultiMC in your computer only the one that happens to get detected first is used
     - i also worry that this will be slow as fuck especially on older computers 
 - Linux: NOT Supported
+
+### Modrinth App
+- Mac: Supported
+    - assumes you use the default App directory
+- Windows: Supported (untested)
+    - assumes you use the default App directory
+- Linux: Supported (untested)
+    - assumes you use the default App directory
