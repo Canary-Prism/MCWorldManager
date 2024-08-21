@@ -29,6 +29,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.2.0
+- added Modrinth App support for Mac, Windows, and Linux
+
 ### 2.1.0
 - added Prism Launcher support for Mac, Windows (mostly), and Linux (kinda)
 - renamed MultiMC launcher name
