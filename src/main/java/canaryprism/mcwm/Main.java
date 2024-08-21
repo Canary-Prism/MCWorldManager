@@ -56,6 +56,7 @@ import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 
 import canaryprism.mcwm.savedir.SaveDirectory;
 import canaryprism.mcwm.savedir.SaveFinder;
+import canaryprism.mcwm.savedir.launcher.Modrinth;
 import canaryprism.mcwm.savedir.launcher.MultiMC;
 import canaryprism.mcwm.savedir.launcher.Prism;
 import canaryprism.mcwm.savedir.launcher.Vanilla;
@@ -100,7 +101,8 @@ public class Main {
         final var save_finders = List.of(
             new Vanilla(),
             new Prism(),
-            new MultiMC()
+            new MultiMC(),
+            new Modrinth()
         );
 
         // here, we assign the name of the OS, according to Java, to a variable...
