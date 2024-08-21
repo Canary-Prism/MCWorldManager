@@ -96,6 +96,10 @@ public class Main {
 
     public static final String VERSION = "2.2.0";
 
+    private static boolean hasArg(String[] args, String arg) {
+        return Stream.of(args).anyMatch(e -> e.equals(arg));
+    }
+
     public static void main(String[] args) throws IOException {
 
         final var save_finders = List.of(
@@ -117,7 +121,9 @@ public class Main {
 
         var has_save = save_finders.stream().filter(e -> !e.getSavesPaths().isEmpty()).toList();
 
-        FlatMacDarkLaf.setup();
+        if (!hasArg(args, "--default-laf")) {
+            FlatMacDarkLaf.setup();
+        }
 
         Path saves_path;
         if (has_save.size() == 0) {
