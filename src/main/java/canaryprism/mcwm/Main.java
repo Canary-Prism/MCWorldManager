@@ -509,6 +509,7 @@ public class Main {
                             <h1>Minecraft World Manager</h1>
                             <p>made for the non nerds</p>
                             by Mia
+                            <p>github.com/Canary-Prism/MCWorldManager</p>
                         </html>
                         """, "About", JOptionPane.INFORMATION_MESSAGE);
             });
