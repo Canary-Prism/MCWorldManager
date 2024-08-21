@@ -4,12 +4,12 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
+
+import static canaryprism.mcwm.swing.nbt.NBTNodeIcon.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -36,35 +36,25 @@ import net.querz.nbt.tag.Tag;
 
 public class NBTNodeRenderer extends DefaultTreeCellRenderer {
 
-    private final HashMap<String, Image> icons = new HashMap<>();
+    private final HashMap<NBTNodeIcon, Image> icons = new HashMap<>();
     {
-        var icon_resource = NBTNodeRenderer.class.getResource("/mcwm/nbt/");
-        
-        try {
-            var icon_path = Path.of(icon_resource.toURI());
-            
-            
-            try (var ex = Executors.newVirtualThreadPerTaskExecutor();
-                var stream = Files.list(icon_path)) {
+        try (var ex = Executors.newVirtualThreadPerTaskExecutor()) {
 
-                var futures = stream.map((path) -> CompletableFuture.runAsync(() -> {
-                    try (var is = Files.newInputStream(path)) {
-                        var image = ImageIO.read(is);
-                        synchronized (icons) {
-                            icons.put(path.getFileName().toString().split("\\.")[0], image);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            var icons = NBTNodeIcon.values();
+
+            var futures = Stream.of(icons).map((icon) -> CompletableFuture.runAsync(() -> {
+                try (var is = NBTNodeRenderer.class.getResourceAsStream("/mcwm/nbt/" + icon.file_name)) {
+                    var image = ImageIO.read(is);
+                    synchronized (this.icons) {
+                        this.icons.put(icon, image);
                     }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }, ex)).toArray(CompletableFuture[]::new);
 
-                }, ex)).toArray(CompletableFuture[]::new);
+            CompletableFuture.allOf(futures).join();
 
-                CompletableFuture.allOf(futures).join();
-
-            }
-
-        } catch (URISyntaxException | IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -121,7 +111,7 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
                     }
                 }
                 if (copy instanceof Tag && !(copy instanceof CompoundTag) && !(copy instanceof ListTag<?>)) {
-                    g.drawImage(icons.get("tag"), 0, 0, null);
+                    g.drawImage(icons.get(tag_icon), 0, 0, null);
                 }
             }
             //#endregion
@@ -143,22 +133,22 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
                 }
     
                 var type = switch (copy) {
-                    case ByteTag _ -> "byte";
-                    case ShortTag _ -> "short";
-                    case IntTag _ -> "int";
-                    case LongTag _ -> "long";
-                    case FloatTag _ -> "float";
-                    case DoubleTag _ -> "double";
-                    case ByteArrayTag _ -> "byte_array";
-                    case StringTag _ -> "string";
-                    case ListTag<?> _ -> "list";
-                    case CompoundTag _ -> "compound";
-                    case IntArrayTag _ -> "int_array";
-                    case LongArrayTag _ -> "long_array";
+                    case ByteTag _ -> byte_icon;
+                    case ShortTag _ -> short_icon;
+                    case IntTag _ -> int_icon;
+                    case LongTag _ -> long_icon;
+                    case FloatTag _ -> float_icon;
+                    case DoubleTag _ -> double_icon;
+                    case ByteArrayTag _ -> byte_array_icon;
+                    case StringTag _ -> string_icon;
+                    case ListTag<?> _ -> list_icon;
+                    case CompoundTag _ -> compound_icon;
+                    case IntArrayTag _ -> int_array_icon;
+                    case LongArrayTag _ -> long_array_icon;
     
-                    case Byte _ -> "byte";
-                    case Integer _ -> "int";
-                    case Long _ -> "long";
+                    case Byte _ -> byte_icon;
+                    case Integer _ -> int_icon;
+                    case Long _ -> long_icon;
                     default -> null; // should never happen
                 };
     
@@ -169,13 +159,13 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
     
             //#region draw list bracket if is list
             if (tag instanceof ListTag<?>) {
-                g.drawImage(icons.get("list_container"), 0, 0, null);
+                g.drawImage(icons.get(list_container_icon), 0, 0, null);
             }
             //#endregion
     
             //#region draw named tag if is named tag
             if (named) {
-                g.drawImage(icons.get("named"), 0, 0, null);
+                g.drawImage(icons.get(named_tag_icon), 0, 0, null);
             }
             //#endregion
         }
