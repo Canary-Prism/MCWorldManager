@@ -137,32 +137,7 @@ public class Prism implements SaveFinder {
         }
 
 
-
-        // the rest is the same as Mac (or at least i'm assuming)
-
-        try {
-            Files.list(instances)
-                .filter(Files::isDirectory)
-                .filter((e) -> Files.isDirectory(e.resolve(".minecraft")))
-                .map((e) -> {
-                    try {
-                        return new SaveDirectory(
-                            Optional.of(ImageIO.read(e.resolve(".minecraft", "icon.png").toFile())),
-                            e.getFileName().toString(),
-                            e.resolve(".minecraft", "saves")
-                        );
-                    } catch (IOException ex) {
-                        return new SaveDirectory(
-                            default_world_icon,
-                            e.getFileName().toString(),
-                            e.resolve(".minecraft", "saves")
-                        );
-                    }
-                })
-                .forEach(saves_path::add);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        load(instances);
     }
 
     @Override
@@ -174,30 +149,9 @@ public class Prism implements SaveFinder {
         var prism = Path.of(home, "Library", "Application Support", "PrismLauncher");
 
         var instances = prism.resolve("instances");
+
         if (Files.isDirectory(instances)) {
-            try {
-                Files.list(instances)
-                    .filter(Files::isDirectory)
-                    .filter((e) -> Files.isDirectory(e.resolve(".minecraft")))
-                    .map((e) -> {
-                        try {
-                            return new SaveDirectory(
-                                Optional.of(ImageIO.read(e.resolve(".minecraft", "icon.png").toFile())),
-                                e.getFileName().toString(),
-                                e.resolve(".minecraft", "saves")
-                            );
-                        } catch (IOException ex) {
-                            return new SaveDirectory(
-                                default_world_icon,
-                                e.getFileName().toString(),
-                                e.resolve(".minecraft", "saves")
-                            );
-                        }
-                    })
-                    .forEach(saves_path::add);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            load(instances);
         }
     }
 
@@ -286,8 +240,10 @@ public class Prism implements SaveFinder {
             }
         }
 
-        // the rest is the same as Mac (or at least i'm assuming)
+        load(instances);
+    }
 
+    private void load(Path instances) {
         try {
             Files.list(instances)
                 .filter(Files::isDirectory)

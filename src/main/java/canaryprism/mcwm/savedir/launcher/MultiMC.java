@@ -118,8 +118,31 @@ public class MultiMC implements SaveFinder {
             return;
         }
 
-        // the rest is the same as Mac (or at least i'm assuming)
+        load(instances);
+    }
 
+    @Override
+    public synchronized void findMac() {
+        var home = System.getProperty("user.home");
+
+        var multimc = Path.of(home, "Applications", "MultiMC.app");
+        if (!Files.isDirectory(multimc)) { // give it 1 more try from root
+            multimc = Path.of("/", "Applications", "MultiMC.app");
+        }
+
+        var instances = multimc.resolve("Data", "instances");
+
+        if (Files.isDirectory(instances)) {
+            load(instances);
+        }
+    }
+
+    @Override
+    public synchronized void findLinux() {
+        // TODO: implement linux
+    }
+
+    private void load(Path instances) {
         try {
             Files.list(instances)
                 .filter(Files::isDirectory)
@@ -143,48 +166,6 @@ public class MultiMC implements SaveFinder {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public synchronized void findMac() {
-        var home = System.getProperty("user.home");
-
-        var multimc = Path.of(home, "Applications", "MultiMC.app");
-        if (!Files.isDirectory(multimc)) { // give it 1 more try from root
-            multimc = Path.of("/", "Applications", "MultiMC.app");
-        }
-
-        var instances = multimc.resolve("Data", "instances");
-        if (Files.isDirectory(instances)) {
-            try {
-                Files.list(instances)
-                    .filter(Files::isDirectory)
-                    .filter((e) -> Files.isDirectory(e.resolve(".minecraft")))
-                    .map((e) -> {
-                        try {
-                            return new SaveDirectory(
-                                Optional.of(ImageIO.read(e.resolve(".minecraft", "icon.png").toFile())), 
-                                e.getFileName().toString(), 
-                                e.resolve(".minecraft", "saves")
-                            );
-                        } catch (IOException ex) {
-                            return new SaveDirectory(
-                                default_world_icon, 
-                                e.getFileName().toString(), 
-                                e.resolve(".minecraft", "saves")
-                            );
-                        }
-                    })
-                    .forEach(saves_path::add);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public synchronized void findLinux() {
-        // TODO: implement linux
     }
 
     @Override
