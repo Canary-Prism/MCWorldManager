@@ -1102,7 +1102,12 @@ public class Main {
         Thread.ofPlatform().start(() -> {
             var path = loaded_file.path();
             var name = path.getFileName().toString();
+
             var confirm = JOptionPane.showConfirmDialog(frame, "Are you sure you want to expand: " + name, "Expand", JOptionPane.YES_NO_OPTION);
+
+            if (confirm != JOptionPane.YES_OPTION) {
+                return;
+            }
 
             var keep = JOptionPane.showConfirmDialog(frame, "Do you want to keep the archive after expanding?", "Keep Archive", JOptionPane.YES_NO_OPTION);
 
@@ -1120,44 +1125,43 @@ public class Main {
                 }
             }
 
-            if (confirm == JOptionPane.YES_OPTION) {
-                try (
-                    var fis = new BufferedInputStream(Files.newInputStream(path));
-                    var ais = createArchiveInputStream(fis)
-                ) {
-                    Files.createDirectories(output_path);
+            try (
+                var fis = new BufferedInputStream(Files.newInputStream(path));
+                var ais = createArchiveInputStream(fis)
+            ) {
+                Files.createDirectories(output_path);
 
-                    ArchiveEntry entry;
-                    while ((entry = ais.getNextEntry()) != null) {
-                        Path entryPath = output_path.resolve(entry.getName());
-                        if (entry.isDirectory()) {
-                            Files.createDirectories(entryPath);
-                        } else {
-                            Files.createDirectories(entryPath.getParent());
-                            try (var os = Files.newOutputStream(entryPath)) {
-                                ais.transferTo(os);
-                            }
+                ArchiveEntry entry;
+                while ((entry = ais.getNextEntry()) != null) {
+                    Path entryPath = output_path.resolve(entry.getName());
+                    if (entry.isDirectory()) {
+                        Files.createDirectories(entryPath);
+                    } else {
+                        Files.createDirectories(entryPath.getParent());
+                        try (var os = Files.newOutputStream(entryPath)) {
+                            ais.transferTo(os);
                         }
                     }
-
-                    JOptionPane.showMessageDialog(null, "Expansion completed successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    JOptionPane.showMessageDialog(frame, "Failed to expand: " + name + " - " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
                 }
 
-                if (keep == JOptionPane.NO_OPTION) {
-                    try {
-                        Files.delete(path);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        JOptionPane.showMessageDialog(frame, "Failed to delete archive: " + name + " - " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-
-                reloadAllWorlds();
+                JOptionPane.showMessageDialog(null, "Expansion completed successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Failed to expand: " + name + " - " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                return;
             }
+
+            if (keep == JOptionPane.NO_OPTION) {
+                try {
+                    Files.delete(path);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Failed to delete archive: " + name + " - " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+
+            reloadAllWorlds();
+        
         });
     }
 
