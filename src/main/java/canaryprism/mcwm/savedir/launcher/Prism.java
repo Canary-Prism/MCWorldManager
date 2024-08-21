@@ -142,22 +142,24 @@ public class Prism implements SaveFinder {
 
         try {
             Files.list(instances)
-                    .filter(Files::isDirectory)
-                    .filter((e) -> Files.isDirectory(e.resolve(".minecraft")))
-                    .map((e) -> {
-                        try {
-                            return new SaveDirectory(
-                                    Optional.of(ImageIO.read(e.resolve(".minecraft", "icon.png").toFile())),
-                                    e.getFileName().toString(),
-                                    e.resolve(".minecraft", "saves"));
-                        } catch (IOException ex) {
-                            return new SaveDirectory(
-                                    default_world_icon,
-                                    e.getFileName().toString(),
-                                    e.resolve(".minecraft", "saves"));
-                        }
-                    })
-                    .forEach(saves_path::add);
+                .filter(Files::isDirectory)
+                .filter((e) -> Files.isDirectory(e.resolve(".minecraft")))
+                .map((e) -> {
+                    try {
+                        return new SaveDirectory(
+                            Optional.of(ImageIO.read(e.resolve(".minecraft", "icon.png").toFile())),
+                            e.getFileName().toString(),
+                            e.resolve(".minecraft", "saves")
+                        );
+                    } catch (IOException ex) {
+                        return new SaveDirectory(
+                            default_world_icon,
+                            e.getFileName().toString(),
+                            e.resolve(".minecraft", "saves")
+                        );
+                    }
+                })
+                .forEach(saves_path::add);
         } catch (Exception e) {
             e.printStackTrace();
         }
