@@ -12,6 +12,15 @@ import javax.imageio.ImageIO;
 import canaryprism.mcwm.savedir.SaveDirectory;
 import canaryprism.mcwm.savedir.SaveFinder;
 
+
+/**
+ * the vanilla Minecraft launcher save finder
+ * <p>
+ * This class is responsible for finding the saves directory of the vanilla Minecraft launcher, 
+ * which is a constant path in any platform
+ * <p>
+ * this makes my job pretty easy
+ */
 public class Vanilla implements SaveFinder {
 
     private static final Optional<Image> icon;

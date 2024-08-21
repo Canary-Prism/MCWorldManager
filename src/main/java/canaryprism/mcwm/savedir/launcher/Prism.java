@@ -17,6 +17,13 @@ import javax.imageio.ImageIO;
 import canaryprism.mcwm.savedir.SaveDirectory;
 import canaryprism.mcwm.savedir.SaveFinder;
 
+
+/**
+ * the Prism launcher save finder
+ * <p>
+ * this class is responsible for finding the saves directory of the Prism launcher,
+ * which is less annoying than MultiMC but still annoying because it has a portable version
+ */
 public class Prism implements SaveFinder {
 
     private static final Optional<Image> icon;

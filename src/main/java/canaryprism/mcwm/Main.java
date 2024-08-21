@@ -88,8 +88,7 @@ import java.io.BufferedInputStream;
 import static java.nio.file.StandardWatchEventKinds.*;
 
 /**
- * Hello world!
- *
+ * The main class of the Minecraft World Manager
  */
 public class Main {
 
@@ -309,6 +308,12 @@ public class Main {
         }
         return Optional.of(saves.toPath());
     }
+
+    /**
+     * just a simple method to turn a throwable into a string with stacktrace and such
+     * @param throwable the throwable to convert
+     * @return the stack trace string
+     */
     public static String getStackTraceAsString(Throwable throwable) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
@@ -320,6 +325,12 @@ public class Main {
     private final List<LoadedFile> worlds = new ArrayList<>();
     private final JFrame frame;
 
+
+    /**
+     * initialise the main class and the frame
+     * 
+     * @param folder the Path to load the worlds from, must be a directory that exists
+     */
     public Main(Path folder) {
         if (!Files.exists(folder)) {
             throw new IllegalArgumentException("Minecraft saves folder does not exist: " + folder);

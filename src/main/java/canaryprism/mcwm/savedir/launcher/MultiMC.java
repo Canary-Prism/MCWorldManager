@@ -17,6 +17,16 @@ import javax.imageio.ImageIO;
 import canaryprism.mcwm.savedir.SaveDirectory;
 import canaryprism.mcwm.savedir.SaveFinder;
 
+
+/**
+ * the MultiMC launcher save finder
+ * <p>
+ * this class is responsible for finding the saves directory of the MultiMC launcher, 
+ * which is a lot more annoying than the vanilla launcher because MultiMC doesn't have a standard install location
+ * and instead just uses the current directory of the exe
+ * <p>
+ * i hate this practise and i hate multimc for doing this
+ */
 public class MultiMC implements SaveFinder {
 
     private static final Optional<Image> icon;

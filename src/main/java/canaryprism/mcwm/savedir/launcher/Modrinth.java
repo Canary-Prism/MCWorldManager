@@ -15,6 +15,13 @@ import org.json.JSONObject;
 import canaryprism.mcwm.savedir.SaveDirectory;
 import canaryprism.mcwm.savedir.SaveFinder;
 
+
+/**
+ * the Modrinth launcher save finder
+ * <p>
+ * this class is responsible for finding the saves directory of the Modrinth launcher,
+ * which is like vanilla and only has one save directory per platform, hooray
+ */
 public class Modrinth implements SaveFinder {
     private static final Optional<Image> icon;
     static {
