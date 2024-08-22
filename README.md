@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.3.1
+- curseforge..
+
 ### 2.3.0
 - added tag icons to NBT Viewer (thanks Squidguset)
 - fixed adding tags inside empty list tags
