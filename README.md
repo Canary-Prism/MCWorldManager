@@ -6,6 +6,8 @@ totally didn't just make this because i got tired of hearing people ask how to d
 
 for more information about different launchers and their support see [Launchers.md](https://github.com/Canary-Prism/MCWorldManager/blob/main/Launchers.md)
 
+NBT tag icons by Squidguset
+
 ### [Download](https://github.com/Canary-Prism/MCWorldManager/releases/)
 
 I'm assuming you know how to use GitHub. If not then here:
@@ -28,6 +30,12 @@ This program uses Java 22 bc i'm weird like that
 
 
 ## Historical Changelog
+
+### 2.3.0
+- added tag icons to NBT Viewer (thanks Squidguset)
+- fixed adding tags inside empty list tags
+- fixed drag and drop type checking
+- hehe about menu :3
 
 ### 2.2.0
 - added Modrinth App support for Mac, Windows, and Linux

@@ -93,7 +93,7 @@ import static java.nio.file.StandardWatchEventKinds.*;
 public class Main {
 
 
-    public static final String VERSION = "2.2.0";
+    public static final String VERSION = "2.3.0";
 
     private static boolean hasArg(String[] args, String arg) {
         return Stream.of(args).anyMatch(e -> e.equals(arg));
