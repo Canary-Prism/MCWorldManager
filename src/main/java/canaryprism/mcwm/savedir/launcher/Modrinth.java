@@ -26,7 +26,7 @@ public class Modrinth implements SaveFinder {
     private static final Optional<Image> icon;
     static {
         Optional<Image> temp_icon;
-        try (var is = MultiMC.class.getResourceAsStream("/mcwm/launcher/modrinth/icon.png")) {
+        try (var is = Modrinth.class.getResourceAsStream("/mcwm/launcher/modrinth/icon.png")) {
             temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
@@ -38,7 +38,7 @@ public class Modrinth implements SaveFinder {
     private static final Optional<Image> default_world_icon;
     static {
         Optional<Image> temp_icon;
-        try (var is = MultiMC.class.getResourceAsStream("/mcwm/launcher/modrinth/default_instance_icon.png")) {
+        try (var is = Modrinth.class.getResourceAsStream("/mcwm/launcher/modrinth/default_instance_icon.png")) {
             temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
