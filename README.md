@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.4.3
+- hotfix for Modrinth Linux Fedora(?)
+
 ### 2.4.2
 - improved (i think) Modrinth save locating in Linux
 
