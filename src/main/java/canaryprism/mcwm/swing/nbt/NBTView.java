@@ -559,8 +559,8 @@ public class NBTView {
                 yield new_tag;
             }
             case ListTag<?> list_tag -> {
-                @SuppressWarnings({"rawtypes", "unchecked"})
-                var new_tag = (ListTag<Tag<?>>)new ListTag(list_tag.getTypeClass());
+                @SuppressWarnings({"unchecked"})
+                var new_tag = (ListTag<Tag<?>>)ListTag.createUnchecked(list_tag.getTypeClass());
                 for (var i = 0; i < node.getChildCount(); ++i) {
                     var child = (DefaultMutableTreeNode) node.getChildAt(i);
                     new_tag.add(reconstructNbt((Tag<?>) child.getUserObject(), child));
