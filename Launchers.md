@@ -39,9 +39,10 @@ fully supported on all platforms (you'd hope so i guess :p)
     - assumes you use the default App directory
 - Windows: Supported (untested)
     - assumes you use the default App directory
-- Linux: Supported (untested)
+- Linux: Supported
     - assumes you use the default App directory
     - uses the `$XDG_CONFIG_HOME` environment variable to locate the save directory, or `~/.config` if it isn't defined
+    - also tries `~/.var/app/com.modrinth.ModrinthApp/config/com.modrinth.theseus` as a last resort (sometimes it uses this for some reason?)
 
 ### CurseForge
 all the support it deserves, on all platforms
