@@ -93,7 +93,7 @@ public class NBTTreeTransferHandler extends TransferHandler {
             return false;
         }
         
-        DefaultMutableTreeNode newParent = (DefaultMutableTreeNode) path.getParentPath().getLastPathComponent();
+        DefaultMutableTreeNode newParent = (DefaultMutableTreeNode) path.getLastPathComponent();
 
         var destination_tag = NBTView.getTag(newParent.getUserObject());
         var tag = ((DefaultMutableTreeNode) tree.getSelectionPath().getLastPathComponent()).getUserObject();
