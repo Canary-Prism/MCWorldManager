@@ -1,13 +1,22 @@
 package canaryprism.mcwm.swing.nbt;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ComponentAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.regex.Pattern;
+
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
@@ -25,6 +34,8 @@ import javax.swing.JTree;
 import javax.swing.event.DocumentListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.apache.commons.text.StringEscapeUtils;
@@ -441,6 +452,134 @@ public class NBTView {
         //#endregion
 
         bottom_panel.add(options_panel);
+
+        var search_panel = new JPanel();
+        {
+            search_panel.setLayout(new GridBagLayout());
+            search_panel.setBorder(new EmptyBorder(5, 5, 5, 10));
+
+            var search_field = new JTextField();
+
+            var matches_label = new JLabel("?/0");
+
+            class Listener implements DocumentListener, KeyListener {
+
+                volatile int index = 0;
+                final List<TreePath> matches = new ArrayList<>();
+
+                @Override
+                public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                    synchronized (matches) {
+                        index = 0;
+                        search(search_field.getText());
+                        focus();
+                    }
+                }
+
+                @Override
+                public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                    synchronized (matches) {
+                        index = 0;
+                        search(search_field.getText());
+                        focus();
+                    }
+                }
+
+                @Override
+                public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                    synchronized (matches) {
+                        index = 0;
+                        search(search_field.getText());
+                        focus();
+                    }
+                }
+
+                void focus() {
+                    if (matches.size() > index) {
+                        tree.setSelectionPath(matches.get(index));
+                        tree.scrollPathToVisible(matches.get(index));
+
+                        matches_label.setText((index + 1) + "/" + matches.size());
+                    } else {
+                        matches_label.setText("?/0");
+                    }
+                }
+
+                void search(String text) {
+                    final Function<String, Boolean> condition;
+                    if (text.startsWith("/") && text.endsWith("/") && text.length() > 1) {
+                        var regex = text.substring(1, text.length() - 1);
+                        
+                        var pattern = Pattern.compile(regex, Pattern.MULTILINE);
+                        condition = (s) -> pattern.matcher(text).matches();
+                    } else {
+                        condition = (s) -> s.toLowerCase().contains(text.toLowerCase());
+                    }
+                    Enumeration<TreeNode> enumeration = root.breadthFirstEnumeration();
+
+                    matches.clear();
+                    while (enumeration.hasMoreElements()) {
+                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) enumeration.nextElement();
+                        if (node.getUserObject() instanceof NamedTag named_tag && condition.apply(named_tag.getName())) {
+
+                            TreePath path = new TreePath(node.getPath());
+
+                            matches.add(path);
+                        }
+                    }
+                }
+
+                @Override
+                public void keyTyped(KeyEvent e) {
+                }
+
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        synchronized (matches) {
+                            if (matches.size() > 0) {
+                                index = (index + 1) % matches.size();
+                                focus();
+                            }
+                            e.consume();
+                        }
+                    }
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                }
+            }
+
+            var listener = new Listener();
+            search_field.getDocument().addDocumentListener(listener);
+            search_field.addKeyListener(listener);
+            
+            var gbc = new GridBagConstraints();
+
+            // Configure search_field to be as wide as possible
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.weightx = 1.0;
+            gbc.fill = GridBagConstraints.HORIZONTAL;
+            search_panel.add(search_field, gbc);
+
+            // add empty space
+            gbc.gridx = 1;
+            gbc.gridy = 0;
+            gbc.weightx = 0;
+            gbc.fill = GridBagConstraints.NONE;
+            search_panel.add(Box.createHorizontalStrut(5), gbc);
+
+            // Configure matches_label to have a constant size
+            gbc.gridx = 2;
+            gbc.gridy = 0;
+            gbc.weightx = 0;
+            gbc.fill = GridBagConstraints.NONE;
+            search_panel.add(matches_label, gbc);
+
+        }
+        bottom_panel.add(search_panel);
 
         var save_panel = new JPanel();
         {
