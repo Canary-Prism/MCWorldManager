@@ -56,6 +56,7 @@ import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 
 import canaryprism.mcwm.savedir.SaveDirectory;
 import canaryprism.mcwm.savedir.SaveFinder;
+import canaryprism.mcwm.savedir.launcher.Curseforge;
 import canaryprism.mcwm.savedir.launcher.Modrinth;
 import canaryprism.mcwm.savedir.launcher.MultiMC;
 import canaryprism.mcwm.savedir.launcher.Prism;
@@ -105,7 +106,8 @@ public class Main {
             new Vanilla(),
             new Prism(),
             new MultiMC(),
-            new Modrinth()
+            new Modrinth(),
+            new Curseforge()
         );
 
         // here, we assign the name of the OS, according to Java, to a variable...
