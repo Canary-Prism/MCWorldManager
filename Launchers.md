@@ -41,6 +41,7 @@ fully supported on all platforms (you'd hope so i guess :p)
     - assumes you use the default App directory
 - Linux: Supported (untested)
     - assumes you use the default App directory
+    - uses the `$XDG_CONFIG_HOME` environment variable to locate the save directory, or `~/.config` if it isn't defined
 
 ### CurseForge
 all the support it deserves, on all platforms
