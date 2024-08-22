@@ -21,7 +21,7 @@ fully supported on all platforms (you'd hope so i guess :p)
     - supports the Flatpak version
     - supports the installed version
     - **DOES NOT** support AppImages (i haven't figured those out yet :p)
-    - for portables, it assumes you put your PrismLauncher somewhere in Downloads, Documents, or Desktop, and is only nested at most 2 folders deep
+    - for portables, it assumes you put your PrismLauncher somewhere in Downloads, Documents, Desktop, or %APPDATA%, and is only nested at most 2 folders deep
     - if you have multiple instances of Prism Launcher in your computer only the one that happens to get detected first is used
 
 ### MultiMC
@@ -29,7 +29,7 @@ fully supported on all platforms (you'd hope so i guess :p)
     - assumes you put your MultiMC.app in your Applications folder (user or root)
     - i'm honestly not sure if this assumption is reasonable
 - Windows: Kinda Supported
-    - assumes you put your MultiMC.exe somewhere in Downloads, Documents, or Desktop, and is only nested at most 2 folders deep
+    - assumes you put your MultiMC.exe somewhere in Downloads, Documents, Desktop, or %APPDATA%, and is only nested at most 2 folders deep
     - if you have multiple instances of MultiMC in your computer only the one that happens to get detected first is used
     - i also worry that this will be slow as fuck especially on older computers 
 - Linux: NOT Supported
