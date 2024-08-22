@@ -101,6 +101,10 @@ public class NBTTreeTransferHandler extends TransferHandler {
         if (destination_tag == null || tag == null) {
             return false;
         }
+        // don't let you drop a node onto itself or its children it will vanish
+        if (tree.getSelectionPath().isDescendant(path)) {
+            return false;
+        }
         return NBTView.canHold(destination_tag, tag);
     }
 
