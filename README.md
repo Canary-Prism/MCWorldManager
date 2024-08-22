@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.4.1
+- fixed a bug where you could drag a tag into itself or its children and it would delete itself
+
 ### 2.4.0
 - added search functionality in NBT Viewer
 - multimc and prism now search in %APPDATA% for their instance folders
