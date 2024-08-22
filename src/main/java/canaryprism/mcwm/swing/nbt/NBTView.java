@@ -49,6 +49,11 @@ import net.querz.nbt.tag.ShortTag;
 import net.querz.nbt.tag.StringTag;
 import net.querz.nbt.tag.Tag;
 
+
+/**
+ * this is probably the worst code I've ever written
+ * which contrasts with the launcher save finder code which is pretty funny
+ */
 public class NBTView {
     private final JFrame frame;
     private final Main main;
