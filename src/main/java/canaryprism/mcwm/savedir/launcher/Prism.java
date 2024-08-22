@@ -9,6 +9,7 @@ import java.nio.file.SimpleFileVisitor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 
@@ -134,14 +135,16 @@ public class Prism implements SaveFinder {
             Thread.ofVirtual().start(() -> {
                 try {
                     countdown.await();
-                    future.completeExceptionally(new RuntimeException("Prism Launcher not found"));
+                    future.cancel(false);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             });
 
             try {
-                instances = future.get();
+                instances = future.join();
+            } catch (CancellationException e) {
+                return;
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -238,14 +241,16 @@ public class Prism implements SaveFinder {
             Thread.ofVirtual().start(() -> {
                 try {
                     countdown.await();
-                    future.completeExceptionally(new RuntimeException("Prism Launcher not found"));
+                    future.cancel(false);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             });
 
             try {
-                instances = future.get();
+                instances = future.join();
+            } catch (CancellationException e) {
+                return;
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
