@@ -29,7 +29,7 @@ public class Prism implements SaveFinder {
     private static final Optional<Image> icon;
     static {
         Optional<Image> temp_icon;
-        try (var is = MultiMC.class.getResourceAsStream("/mcwm/launcher/prism/icon.png")) {
+        try (var is = Prism.class.getResourceAsStream("/mcwm/launcher/prism/icon.png")) {
             temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
@@ -41,7 +41,7 @@ public class Prism implements SaveFinder {
     private static final Optional<Image> default_world_icon;
     static {
         Optional<Image> temp_icon;
-        try (var is = MultiMC.class.getResourceAsStream("/mcwm/launcher/prism/default_instance_icon.png")) {
+        try (var is = Prism.class.getResourceAsStream("/mcwm/launcher/prism/default_instance_icon.png")) {
             temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
