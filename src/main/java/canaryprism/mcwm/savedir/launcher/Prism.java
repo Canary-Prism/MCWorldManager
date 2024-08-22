@@ -78,7 +78,12 @@ public class Prism implements SaveFinder {
 
     
     
-            var targets = List.of(Path.of(home, "Downloads"), Path.of(home, "Documents"), Path.of(home, "Desktop"));
+            var targets = List.of(
+                Path.of(home, "Downloads"), 
+                Path.of(home, "Documents"), 
+                Path.of(home, "Desktop"),
+                Path.of(appdata) // who the heck would put prism in appdata
+            );
     
             final var future = new CompletableFuture<Path>();
             var countdown = new CountDownLatch(targets.size());

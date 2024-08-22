@@ -62,8 +62,14 @@ public class MultiMC implements SaveFinder {
         // and there isn't a standard place to put multimc in windows
 
         var home = System.getProperty("user.home");
+        var appdata = System.getenv("APPDATA");
 
-        var targets = List.of(Path.of(home, "Downloads"), Path.of(home, "Documents"), Path.of(home, "Desktop"));
+        var targets = List.of(
+            Path.of(home, "Downloads"), 
+            Path.of(home, "Documents"), 
+            Path.of(home, "Desktop"),
+            Path.of(appdata) // who the heck would put multimc in appdata
+        );
 
 
         final var future = new CompletableFuture<Path>();
