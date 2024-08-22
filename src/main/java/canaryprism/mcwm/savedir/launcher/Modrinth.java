@@ -71,6 +71,11 @@ public class Modrinth implements SaveFinder {
         // what the hell is xdg_config_home
         var xdg_config_home = System.getenv("XDG_CONFIG_HOME");
 
+        if (xdg_config_home == null) { // if it's not set
+            var home = System.getProperty("user.home");
+            xdg_config_home = Path.of(home, ".config").toString();
+        }
+
         load(Path.of(xdg_config_home, "com.modrinth.theseus"));
     }
 
