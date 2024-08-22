@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.4.2
+- improved (i think) Modrinth save locating in Linux
+
 ### 2.4.1
 - fixed a bug where you could drag a tag into itself or its children and it would delete itself
 
