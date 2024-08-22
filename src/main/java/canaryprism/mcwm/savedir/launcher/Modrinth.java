@@ -76,7 +76,17 @@ public class Modrinth implements SaveFinder {
             xdg_config_home = Path.of(home, ".config").toString();
         }
 
-        load(Path.of(xdg_config_home, "com.modrinth.theseus"));
+        var path = Path.of(xdg_config_home, "com.modrinth.theseus");
+        if (!Files.isDirectory(path)) { // last ditch effort
+
+            // apparently fedora does this???
+            var home = System.getProperty("user.home");
+            path = Path.of(home, ".var", "app", "com.modrinth.ModrinthApp", "config", "com.modrinth.theseus");
+        }
+
+        // okay linux is definitely the most annoying to find
+
+        load(path);
     }
 
     private void load(Path modrinth) {
