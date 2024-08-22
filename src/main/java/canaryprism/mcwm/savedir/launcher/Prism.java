@@ -134,7 +134,7 @@ public class Prism implements SaveFinder {
             Thread.ofVirtual().start(() -> {
                 try {
                     countdown.await();
-                    future.completeExceptionally(new RuntimeException("MultiMC not found"));
+                    future.completeExceptionally(new RuntimeException("Prism Launcher not found"));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -238,7 +238,7 @@ public class Prism implements SaveFinder {
             Thread.ofVirtual().start(() -> {
                 try {
                     countdown.await();
-                    future.completeExceptionally(new RuntimeException("MultiMC not found"));
+                    future.completeExceptionally(new RuntimeException("Prism Launcher not found"));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
