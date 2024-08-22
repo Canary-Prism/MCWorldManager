@@ -10,6 +10,11 @@ import java.util.function.IntFunction;
 import canaryprism.mcwm.savedir.SaveDirectory;
 import canaryprism.mcwm.savedir.SaveFinder;
 
+/**
+ * nobody likes curseforge
+ * <p>
+ * fuck you curseforge
+ */
 public class Curseforge implements SaveFinder {
 
     @Override
