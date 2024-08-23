@@ -6,6 +6,8 @@ import java.awt.GridBagLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -118,16 +120,6 @@ public class NBTView {
 
         tree.setToggleClickCount(0);
 
-        // tree.addMouseListener(new MouseAdapter() {
-        //     public void mousePressed(MouseEvent e) {
-        //         if (e.getClickCount() == 2) {
-        //             int row = tree.getRowForLocation(e.getX(), e.getY());
-        //             if (row != -1) {
-        //                 tree.startEditingAtPath(tree.getPathForRow(row));
-        //             }
-        //         }
-        //     }
-        // });
 
         var renderer = new NBTNodeRenderer();
 
@@ -448,6 +440,14 @@ public class NBTView {
             edit_button.setEnabled(false);
             delete_button.setEnabled(false);
             duplicate_button.setEnabled(false);
+
+            tree.addMouseListener(new MouseAdapter() {
+                public void mousePressed(MouseEvent e) {
+                    if (e.getClickCount() == 2) {
+                        edit_button.doClick(0);
+                    }
+                }
+            });
         }
         //#endregion
 
@@ -876,7 +876,7 @@ public class NBTView {
 
                 var result = future.handle((e, t) -> {
                     dialog.dispose();
-                    if (t != null)
+                    if (t != null && !(t instanceof CancellationException))
                         throw unchecked(t);
                     return e;
                 }).join();
@@ -918,7 +918,7 @@ public class NBTView {
 
                     result = future.handle((e, t) -> {
                         dialog.dispose();
-                        if (t != null)
+                        if (t != null && !(t instanceof CancellationException))
                             throw unchecked(t);
                         return e;
                     }).join();
@@ -989,7 +989,7 @@ public class NBTView {
 
                     result = future.handle((e, t) -> {
                         dialog.dispose();
-                        if (t != null)
+                        if (t != null && !(t instanceof CancellationException))
                             throw unchecked(t);
                         return e;
                     }).join();
@@ -1101,7 +1101,7 @@ public class NBTView {
 
         var result = future.handle((e, t) -> {
             dialog.dispose();
-            if (t != null) 
+            if (t != null && !(t instanceof CancellationException)) 
                 throw unchecked(t);
             return e;
         }).join();
