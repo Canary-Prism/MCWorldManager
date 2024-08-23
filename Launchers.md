@@ -31,8 +31,9 @@ fully supported on all platforms (you'd hope so i guess :p)
 - Windows: Kinda Supported
     - assumes you put your MultiMC.exe somewhere in Downloads, Documents, Desktop, or %APPDATA%, and is only nested at most 2 folders deep
     - if you have multiple instances of MultiMC in your computer only the one that happens to get detected first is used
-    - i also worry that this will be slow as fuck especially on older computers 
-- Linux: NOT Supported
+- Linux: Kinda Supported
+    - assumes you put your MultiMC.exe somewhere in Downloads, Documents, Desktop, or %APPDATA%, and is only nested at most 2 folders deep
+    - if you have multiple instances of MultiMC in your computer only the one that happens to get detected first is used
 
 ### Modrinth App
 - Mac: Supported
