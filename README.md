@@ -31,6 +31,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.4.4
+- added support for MultiMC on Linux
+- added caching of found launcher save directories
+
 ### 2.4.3
 - hotfix for Modrinth Linux Fedora(?)
 
