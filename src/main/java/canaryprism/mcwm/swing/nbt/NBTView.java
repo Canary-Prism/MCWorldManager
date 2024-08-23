@@ -304,8 +304,6 @@ public class NBTView {
                     throw new IllegalStateException("No node selected");
 
                 var o = node.getUserObject();
-                var named = o instanceof NamedTag;
-                var o1 = o;
                 if (o instanceof NamedTag named_tag) {
                     o = named_tag.getTag();
                 }
@@ -319,12 +317,14 @@ public class NBTView {
                         if (new_tag == null) {
                             return;
                         }
-                        if (named) 
-                            new_tag = new NamedTag(((NamedTag) o1).getName(), (Tag<?>)new_tag);
-    
+                        
                         for (var path : selected) {
                             var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
-                            parent.setUserObject(clone(new_tag));
+                            if (parent.getUserObject() instanceof NamedTag named_tag) {
+                                parent.setUserObject(new NamedTag(named_tag.getName(), (Tag<?>)clone(new_tag)));
+                            } else {
+                                parent.setUserObject(clone(new_tag));
+                            }
                         }
     
                         treeModel.reload(node);
