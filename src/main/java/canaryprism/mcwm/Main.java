@@ -51,6 +51,7 @@ import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.json.JSONObject;
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 
@@ -70,6 +71,7 @@ import canaryprism.mcwm.swing.file.WorldFile;
 import canaryprism.mcwm.swing.nbt.NBTView;
 import canaryprism.mcwm.swing.savedir.SaveDirectoryView;
 import canaryprism.mcwm.swing.savedir.SaveFinderView;
+import dev.dirs.ProjectDirectories;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -94,13 +96,15 @@ import static java.nio.file.StandardWatchEventKinds.*;
 public class Main {
 
 
-    public static final String VERSION = "2.4.3";
+    public static final String VERSION = "2.4.4-beta-1";
 
     private static boolean hasArg(String[] args, String arg) {
         return Stream.of(args).anyMatch(e -> e.equals(arg));
     }
 
     public static void main(String[] args) throws IOException {
+
+        final var dirs = ProjectDirectories.from("", "canaryprism", "mcwm");
 
         final var save_finders = List.of(
             new Vanilla(),
@@ -110,14 +114,46 @@ public class Main {
             new Curseforge()
         );
 
+        var working_directory = Path.of(dirs.cacheDir);
+        if (Files.notExists(working_directory)) {
+            Files.createDirectories(working_directory);
+        }
+
+        var cache_file = working_directory.resolve("cache.json");
+
+        JSONObject save = null;
+        if (Files.exists(cache_file)) {
+            save = new JSONObject(Files.readString(cache_file));
+            for (var finder : save_finders) {
+                var path = save.optString(finder.getClass().getName());
+                if (!path.isEmpty()) {
+                    finder.loadCache(Path.of(path));
+                }
+            }
+        }
+        
+
         // here, we assign the name of the OS, according to Java, to a variable...
+        // only try to find the saves if loading from cache failed
         String OS = (System.getProperty("os.name")).toUpperCase();
         if (OS.contains("WIN")) {
-            save_finders.forEach(SaveFinder::findWindows);
+            save_finders.stream().filter(e -> e.getSavesPaths().isEmpty()).forEach(SaveFinder::findWindows);
         } else if (OS.contains("MAC")) {
-            save_finders.forEach(SaveFinder::findMac);
+            save_finders.stream().filter(e -> e.getSavesPaths().isEmpty()).forEach(SaveFinder::findMac);
         } else { // we'll just assume Linux or something else
-            save_finders.forEach(SaveFinder::findLinux);
+            save_finders.stream().filter(e -> e.getSavesPaths().isEmpty()).forEach(SaveFinder::findLinux);
+        }
+
+        { // save the cache
+            var new_save = Optional.ofNullable(save).orElseGet(JSONObject::new);
+
+            for (var finder : save_finders) {
+                finder.toCache().map(Path::toString).ifPresent((e) -> {
+                    new_save.put(finder.getClass().getName(), e);
+                });
+            }
+
+            Files.writeString(cache_file, new_save.toString());
         }
 
         var has_save = save_finders.stream().filter(e -> !e.getSavesPaths().isEmpty()).toList();
