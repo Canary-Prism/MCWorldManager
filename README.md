@@ -31,6 +31,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.4.6
+- fixed mass editing not working
+- edit popup selects the original value text
+
 ### 2.4.5
 - double click on a tag to edit in NBT Viewer
 - popup windows in NBT Viewer now appear in the middle of the main NBT Viewer window
