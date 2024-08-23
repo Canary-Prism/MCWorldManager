@@ -39,9 +39,11 @@ fully supported on all platforms (you'd hope so i guess :p)
     - assumes you use the default App directory
 - Windows: Supported (untested)
     - assumes you use the default App directory
-- Linux: Supported
+- Linux: Kinda Supported
+    - turns out the modrinth website's stated linux directory seems to be completely wrong so i've had to try to figure it out by myself
     - assumes you use the default App directory
     - uses the `$XDG_CONFIG_HOME` environment variable to locate the save directory, or `~/.config` if it isn't defined
+    - if that doesn't work it tries `~/.local/share/ModrinthApp`
     - also tries `~/.var/app/com.modrinth.ModrinthApp/config/com.modrinth.theseus` as a last resort (sometimes it uses this for some reason?)
 
 ### CurseForge
