@@ -20,7 +20,7 @@ fully supported on all platforms (you'd hope so i guess :p)
 - Linux: Kinda Supported (untested)
     - supports the Flatpak version
     - supports the installed version
-    - **DOES NOT** support AppImages (i haven't figured those out yet :p)
+    - supports AppImages
     - for portables, it assumes you put your PrismLauncher somewhere in Downloads, Documents, Desktop, or %APPDATA%, and is only nested at most 2 folders deep
     - if you have multiple instances of Prism Launcher in your computer only the one that happens to get detected first is used
 
