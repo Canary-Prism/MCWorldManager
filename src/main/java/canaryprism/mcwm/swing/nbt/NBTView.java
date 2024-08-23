@@ -1049,6 +1049,10 @@ public class NBTView {
         panel.add(Box.createVerticalStrut(5));
 
         var value_field = new JTextField(def);
+
+        // make the default value selected
+        value_field.selectAll();
+
         panel.add(value_field);
 
         panel.add(Box.createVerticalStrut(5));
