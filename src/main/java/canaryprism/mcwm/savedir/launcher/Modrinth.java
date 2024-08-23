@@ -70,17 +70,24 @@ public class Modrinth implements SaveFinder {
 
         // what the hell is xdg_config_home
         var xdg_config_home = System.getenv("XDG_CONFIG_HOME");
+        var home = System.getProperty("user.home");
 
         if (xdg_config_home == null) { // if it's not set
-            var home = System.getProperty("user.home");
             xdg_config_home = Path.of(home, ".config").toString();
         }
 
         var path = Path.of(xdg_config_home, "com.modrinth.theseus");
+
+        if (!Files.isDirectory(path)) {
+            // this seems to be the directory that my machine uses
+            // at this point the path modrinth says they use on the website has been accurate exactly 0 times
+            // i don't even think $XDG_CONFIG_HOME is a thing
+            path = Path.of(home, ".local", "share", "ModrinthApp");
+        }
+
         if (!Files.isDirectory(path)) { // last ditch effort
 
             // apparently fedora does this???
-            var home = System.getProperty("user.home");
             path = Path.of(home, ".var", "app", "com.modrinth.ModrinthApp", "config", "com.modrinth.theseus");
         }
 
