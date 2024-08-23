@@ -865,6 +865,7 @@ public class NBTView {
 
                 dialog.setContentPane(panel);
                 dialog.pack();
+                dialog.setLocationRelativeTo(frame);
                 dialog.setVisible(true);
 
                 dialog.addComponentListener(new ComponentAdapter() {
@@ -876,7 +877,7 @@ public class NBTView {
 
                 var result = future.handle((e, t) -> {
                     dialog.dispose();
-                    if (t != null && !(t instanceof CancellationException))
+                    if (t != null)
                         throw unchecked(t);
                     return e;
                 }).join();
@@ -908,6 +909,7 @@ public class NBTView {
 
                     dialog.setContentPane(panel);
                     dialog.pack();
+                    dialog.setLocationRelativeTo(frame);
                     dialog.setVisible(true);
                     dialog.addComponentListener(new ComponentAdapter() {
                         @Override
@@ -918,7 +920,7 @@ public class NBTView {
 
                     result = future.handle((e, t) -> {
                         dialog.dispose();
-                        if (t != null && !(t instanceof CancellationException))
+                        if (t != null)
                             throw unchecked(t);
                         return e;
                     }).join();
@@ -978,6 +980,7 @@ public class NBTView {
 
                     dialog.setContentPane(panel);
                     dialog.pack();
+                    dialog.setLocationRelativeTo(frame);
                     dialog.setVisible(true);
 
                     dialog.addComponentListener(new ComponentAdapter() {
@@ -989,7 +992,7 @@ public class NBTView {
 
                     result = future.handle((e, t) -> {
                         dialog.dispose();
-                        if (t != null && !(t instanceof CancellationException))
+                        if (t != null)
                             throw unchecked(t);
                         return e;
                     }).join();
@@ -1094,6 +1097,7 @@ public class NBTView {
         dialog.setContentPane(panel);
         dialog.setResizable(false);
         dialog.pack();
+        dialog.setLocationRelativeTo(frame);
         dialog.setVisible(true);
 
 
@@ -1101,7 +1105,7 @@ public class NBTView {
 
         var result = future.handle((e, t) -> {
             dialog.dispose();
-            if (t != null && !(t instanceof CancellationException)) 
+            if (t != null) 
                 throw unchecked(t);
             return e;
         }).join();
