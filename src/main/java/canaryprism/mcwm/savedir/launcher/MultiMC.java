@@ -158,7 +158,81 @@ public class MultiMC implements SaveFinder {
 
     @Override
     public synchronized void findLinux() {
-        // TODO: implement linux
+
+        var home = System.getProperty("user.home");
+
+        var targets = List.of(
+            Path.of(home, "Downloads"), 
+            Path.of(home, "Documents"), 
+            Path.of(home, "Desktop")
+        );
+
+
+        final var future = new CompletableFuture<Path>();
+        var countdown = new CountDownLatch(targets.size());
+
+        for (var target : targets) {
+            Thread.ofVirtual().start(() -> {
+                try {
+                    Files.walkFileTree(target, new SimpleFileVisitor<>() {
+        
+                        final int max_depth = 2;
+                        int depth = 0;
+
+                        @Override
+                        public FileVisitResult preVisitDirectory(Path dir, java.nio.file.attribute.BasicFileAttributes attrs) {
+                            if (Files.isDirectory(dir) 
+                                && Files.isRegularFile(dir.resolve("MultiMC"))
+                                && Files.isDirectory(dir.resolve("instances"))) {
+    
+                                future.complete(dir.resolve("instances"));
+    
+                                return java.nio.file.FileVisitResult.TERMINATE;
+                            }
+                            if (future.isDone()) {
+                                return java.nio.file.FileVisitResult.TERMINATE;
+                            }
+
+                            if (depth >= max_depth) {
+                                return java.nio.file.FileVisitResult.SKIP_SUBTREE;
+                            }
+                            depth++;
+                            return java.nio.file.FileVisitResult.CONTINUE;
+                        }
+        
+                        @Override
+                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                            depth--;
+                            return java.nio.file.FileVisitResult.CONTINUE;
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                countdown.countDown();
+            });
+        }
+
+        Thread.ofVirtual().start(() -> {
+            try {
+                countdown.await();
+                future.cancel(false);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+
+        Path instances;
+        try {
+            instances = future.join();
+        } catch (CancellationException e) {
+            return;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        load(instances);
     }
 
     private void load(Path instances) {
