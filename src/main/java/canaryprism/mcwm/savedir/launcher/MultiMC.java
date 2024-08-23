@@ -256,9 +256,23 @@ public class MultiMC implements SaveFinder {
                     }
                 })
                 .forEach(saves_path::add);
+
+            cache_path = instances;
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private volatile Path cache_path;
+
+    @Override
+    public Optional<Path> toCache() {
+        return Optional.ofNullable(cache_path);
+    }
+
+    @Override
+    public void loadCache(Path path) {
+        load(path);
     }
 
     @Override
