@@ -125,9 +125,12 @@ public class Main {
         if (Files.exists(cache_file)) {
             save = new JSONObject(Files.readString(cache_file));
             for (var finder : save_finders) {
-                var path = save.optString(finder.getClass().getName());
-                if (!path.isEmpty()) {
+                try {
+                    var path = save.getString(finder.getClass().getName());
                     finder.loadCache(Path.of(path));
+                } catch (Exception e) {
+                    System.err.print("Failed to load cache for " + finder.getClass().getName() + ": ");
+                    e.printStackTrace();
                 }
             }
         }
