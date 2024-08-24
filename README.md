@@ -31,6 +31,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.4.7
+- added try catches to cache loading
+- improved™ copy to clipboard function
+
 ### 2.4.6
 - fixed mass editing not working
 - edit popup selects the original value text
