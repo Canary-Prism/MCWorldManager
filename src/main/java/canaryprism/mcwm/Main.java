@@ -80,8 +80,10 @@ import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
@@ -1247,27 +1249,38 @@ public class Main {
 
     private static final Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
     private void copy(LoadedFile file) {
-        try {
-            clipboard.setContents(new Transferable() {
-                @Override
-                public DataFlavor[] getTransferDataFlavors() {
-                    return new DataFlavor[] { DataFlavor.javaFileListFlavor };
-                }
-    
-                @Override
-                public boolean isDataFlavorSupported(DataFlavor flavor) {
-                    return flavor.equals(DataFlavor.javaFileListFlavor);
-                }
-    
-                @Override
-                public Object getTransferData(DataFlavor flavor) {
-                    return List.of(file.path().toFile());
-                }
-            }, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(frame, "Failed to copy to clipboard: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        Thread.ofVirtual().start(() -> {
+            try {
+                clipboard.setContents(new Transferable() {
+                    final File f = file.path().toFile();
+                    @Override
+                    public DataFlavor[] getTransferDataFlavors() {
+                        return new DataFlavor[] { DataFlavor.javaFileListFlavor };
+                    }
+        
+                    @Override
+                    public boolean isDataFlavorSupported(DataFlavor flavor) {
+                        return flavor.equals(DataFlavor.javaFileListFlavor);
+                    }
+        
+                    @Override
+                    public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+                        if (!isDataFlavorSupported(flavor)) {
+                            throw new UnsupportedFlavorException(flavor);
+                        }
+                        return List.of(f);
+                    }
+                }, new ClipboardOwner() {
+                    @Override
+                    public void lostOwnership(Clipboard clipboard, Transferable contents) {
+                        System.err.println("Lost ownership of clipboard");
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Failed to copy to clipboard: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
     }
 
     private void open(Path path) {
