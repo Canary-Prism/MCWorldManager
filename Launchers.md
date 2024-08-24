@@ -32,7 +32,7 @@ fully supported on all platforms (you'd hope so i guess :p)
     - assumes you put your MultiMC.exe somewhere in Downloads, Documents, Desktop, or %APPDATA%, and is only nested at most 2 folders deep
     - if you have multiple instances of MultiMC in your computer only the one that happens to get detected first is used
 - Linux: Kinda Supported
-    - assumes you put your MultiMC.exe somewhere in Downloads, Documents, Desktop, or %APPDATA%, and is only nested at most 2 folders deep
+    - assumes you put your MultiMC somewhere in Downloads, Documents, Desktop, or %APPDATA%, and is only nested at most 2 folders deep
     - if you have multiple instances of MultiMC in your computer only the one that happens to get detected first is used
 
 ### Modrinth App
