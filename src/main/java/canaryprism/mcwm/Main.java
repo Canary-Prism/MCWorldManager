@@ -51,6 +51,7 @@ import org.apache.commons.compress.archivers.ArchiveException;
 import org.apache.commons.compress.archivers.ArchiveInputStream;
 import org.apache.commons.compress.archivers.ArchiveStreamFactory;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
@@ -125,15 +126,20 @@ public class Main {
 
         JSONObject save = null;
         if (Files.exists(cache_file)) {
-            save = new JSONObject(Files.readString(cache_file));
-            for (var finder : save_finders) {
-                try {
-                    var path = save.getString(finder.getClass().getName());
-                    finder.loadCache(Path.of(path));
-                } catch (Exception e) {
-                    System.err.print("Failed to load cache for " + finder.getClass().getName() + ": ");
-                    e.printStackTrace();
+            try {
+                save = new JSONObject(Files.readString(cache_file));
+                for (var finder : save_finders) {
+                    try {
+                        var path = save.getString(finder.getClass().getName());
+                        finder.loadCache(Path.of(path));
+                    } catch (Exception e) {
+                        System.err.print("Failed to load cache for " + finder.getClass().getName() + ": ");
+                        e.printStackTrace();
+                    }
                 }
+            } catch (JSONException | IOException e) {
+                System.err.print("Failed to load cache: ");
+                e.printStackTrace();
             }
         }
         
