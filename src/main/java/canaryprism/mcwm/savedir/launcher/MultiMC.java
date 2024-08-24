@@ -272,7 +272,8 @@ public class MultiMC implements SaveFinder {
 
     @Override
     public void loadCache(Path path) {
-        load(path);
+        if (Files.isDirectory(path))
+            load(path);
     }
 
     @Override
