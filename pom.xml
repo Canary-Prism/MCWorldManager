@@ -61,6 +61,11 @@
       <artifactId>directories</artifactId>
       <version>26</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.vincentrussell</groupId>
+      <artifactId>java-ini-parser</artifactId>
+      <version>1.6</version>
+    </dependency>
   </dependencies>
 
   <build>
