@@ -15,6 +15,8 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.imageio.ImageIO;
 
+import com.github.vincentrussell.ini.Ini;
+
 import canaryprism.mcwm.savedir.SaveDirectory;
 import canaryprism.mcwm.savedir.SaveFinder;
 
@@ -266,19 +268,25 @@ public class Prism implements SaveFinder {
                 .filter(Files::isDirectory)
                 .filter((e) -> Files.isDirectory(e.resolve(".minecraft", "saves")))
                 .map((e) -> {
+                    Image icon;
                     try {
-                        return new SaveDirectory(
-                            Optional.of(ImageIO.read(e.resolve(".minecraft", "icon.png").toFile())),
-                            e.getFileName().toString(),
-                            e.resolve(".minecraft", "saves")
-                        );
+                        icon = ImageIO.read(e.resolve(".minecraft", "icon.png").toFile());
                     } catch (IOException ex) {
-                        return new SaveDirectory(
-                            default_world_icon,
-                            e.getFileName().toString(),
-                            e.resolve(".minecraft", "saves")
-                        );
+                        icon = null;
                     }
+                    String name;
+                    try {
+                        var ini = new Ini();
+                        ini.load(e.resolve("instance.cfg").toFile()); // i'm not sure using File instead of NIO is a good idea
+                        name = (String) ini.getSection("General").getOrDefault("name", e.getFileName().toString());
+                    } catch (IOException | ClassCastException | NullPointerException ex) {
+                        name = e.getFileName().toString();
+                    }
+                    return new SaveDirectory(
+                        Optional.ofNullable(icon).or(() -> default_world_icon),
+                        name,
+                        e.resolve(".minecraft", "saves")
+                    );
                 })
                 .forEach(saves_path::add);
 
