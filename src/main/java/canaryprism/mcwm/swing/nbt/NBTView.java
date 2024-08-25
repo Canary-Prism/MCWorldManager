@@ -444,7 +444,17 @@ public class NBTView {
             tree.addMouseListener(new MouseAdapter() {
                 public void mousePressed(MouseEvent e) {
                     if (e.getClickCount() == 2) {
-                        edit_button.doClick(0);
+                        if (edit_button.isEnabled()) {
+                            edit_button.doClick(0);
+                        }
+                    } else if (e.getClickCount() == 3) {
+                        if (!edit_button.isEnabled()) {
+                            if (tree.isExpanded(tree.getSelectionPath())) {
+                                collapseAll(tree.getSelectionPath(), tree);
+                            } else {
+                                expandAll(tree.getSelectionPath(), tree);
+                            }
+                        }
                     }
                 }
             });
@@ -801,6 +811,28 @@ public class NBTView {
             case Error e -> new RuntimeException(e);
             default -> new RuntimeException(t);
         };
+    }
+
+    private void expandAll(TreePath parent, JTree tree) {
+        tree.expandPath(parent);
+        TreeNode node = (TreeNode) parent.getLastPathComponent();
+        Enumeration<?> e = node.children();
+        while (e.hasMoreElements()) {
+            TreeNode n = (TreeNode) e.nextElement();
+            TreePath path = parent.pathByAddingChild(n);
+            expandAll(path, tree);
+        }
+    }
+
+    private void collapseAll(TreePath parent, JTree tree) {
+        TreeNode node = (TreeNode) parent.getLastPathComponent();
+        Enumeration<?> e = node.children();
+        while (e.hasMoreElements()) {
+            TreeNode n = (TreeNode) e.nextElement();
+            TreePath path = parent.pathByAddingChild(n);
+            collapseAll(path, tree);
+        }
+        tree.collapsePath(parent);
     }
 
     private Object newTagOf(Tag<?> parent) {
