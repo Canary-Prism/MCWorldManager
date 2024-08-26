@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.4.9
+- Prism and MultiMC now use the actual instance name and not the folder name
+
 ### 2.4.8
 - more try catches
 
