@@ -37,10 +37,13 @@ fully supported on all platforms (you'd hope so i guess :p)
 
 ### Modrinth App
 - Mac: Supported
+    - supports both the old and new directory (post 0.8.2)
     - assumes you use the default App directory
 - Windows: Supported (untested)
+    - supports both the old and new directory (post 0.8.2)
     - assumes you use the default App directory
-- Linux: Kinda Supported
+- Linux: Maybe Supported (untested)
+    - i don't know what the 0.8.2 update changed its directory to, or if it changed at all
     - turns out the modrinth website's stated linux directory seems to be completely wrong so i've had to try to figure it out by myself
     - assumes you use the default App directory
     - uses the `$XDG_CONFIG_HOME` environment variable to locate the save directory, or `~/.config` if it isn't defined
