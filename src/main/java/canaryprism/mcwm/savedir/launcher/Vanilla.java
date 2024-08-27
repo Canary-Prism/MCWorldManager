@@ -71,6 +71,15 @@ public class Vanilla implements SaveFinder {
     }
 
     @Override
+    public void loadCache(Path path) {
+        try {
+            if (Files.exists(path))
+                saves_path.add(new SaveDirectory(Optional.empty(), getLauncherName(), path));
+        } catch (Exception e) {
+        }
+    }
+
+    @Override
     public synchronized List<SaveDirectory> getSavesPaths() {
         return saves_path;
     }
