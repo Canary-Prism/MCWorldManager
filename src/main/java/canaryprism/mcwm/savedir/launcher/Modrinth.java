@@ -54,7 +54,12 @@ public class Modrinth implements SaveFinder {
 
         var appdata = System.getenv("APPDATA");
 
-        load(Path.of(appdata, "com.modrinth.theseus"));
+        var path = Path.of(appdata, "ModrintApp");
+        if (!Files.isDirectory(path)) {
+            path = Path.of(appdata, "com.modrinth.theseus");
+        }
+
+        load(path);
     }
 
     @Override
@@ -62,7 +67,13 @@ public class Modrinth implements SaveFinder {
 
         var home = System.getProperty("user.home");
 
-        load(Path.of(home, "Library", "Application Support", "com.modrinth.theseus"));
+        var path = Path.of(home, "Library", "Application Support", "ModrinthApp");
+
+        if (!Files.isDirectory(path)) {
+            path = Path.of(home, "Library", "Application Support", "com.modrinth.theseus");
+        }
+
+        load(path);
     }
 
     @Override
