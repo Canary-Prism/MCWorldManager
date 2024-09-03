@@ -477,10 +477,13 @@ public class Main {
             public synchronized void drop(DropTargetDropEvent evt) {
                 try {
                     evt.acceptDrop(DnDConstants.ACTION_COPY);
-                    List<File> droppedFiles = (List<File>) evt.getTransferable()
+                    List<File> dropped_files = (List<File>) evt.getTransferable()
                             .getTransferData(DataFlavor.javaFileListFlavor);
                     Thread.ofPlatform().start(() -> {
-                        importWorlds(droppedFiles);
+                        if (dropped_files.isEmpty()) {
+                            return;
+                        }
+                        importWorlds(dropped_files);
                     });
                     evt.dropComplete(true);
                 } catch (Exception ex) {
