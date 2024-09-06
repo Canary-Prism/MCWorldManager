@@ -756,13 +756,15 @@ public class NBTView {
         var nbt = reconstructNbt(this.nbt, this.root);
 
         NBTUtil.write(nbt, file);
-
-        main.reloadAllWorlds();
+        if (main != null)
+            main.reloadAllWorlds();
     }
 
     public void close() {
         frame.dispose();
-        main.reloadAllWorlds();
+
+        if (main != null)
+            main.reloadAllWorlds();
     }
 
     enum TagType {
