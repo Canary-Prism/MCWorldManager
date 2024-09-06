@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 2.4.11
+- added commandline args `--laf <classname>` and `--nbt-view <file>`
+
 ### 2.4.10
 - updated Modrinth saves directory to use the newer one
 - added caching to Modrinth save finding

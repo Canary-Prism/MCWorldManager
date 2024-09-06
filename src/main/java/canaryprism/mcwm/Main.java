@@ -102,7 +102,7 @@ import static java.nio.file.StandardWatchEventKinds.*;
 public class Main {
 
 
-    public static final String VERSION = "2.4.10";
+    public static final String VERSION = "2.4.11";
 
     private static <T> T getArg(String[] args, String key, Function<String, T> parser, Supplier<T> default_value) {
         for (int i = args.length - 2; i >= 0; i--) {
