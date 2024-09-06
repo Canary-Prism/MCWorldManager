@@ -22,9 +22,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -101,8 +104,13 @@ public class Main {
 
     public static final String VERSION = "2.4.10";
 
-    private static boolean hasArg(String[] args, String arg) {
-        return Stream.of(args).anyMatch(e -> e.equals(arg));
+    private static <T> T getArg(String[] args, String key, Function<String, T> parser, Supplier<T> default_value) {
+        for (int i = args.length - 2; i >= 0; i--) {
+            if (args[i].equals(key)) {
+                return parser.apply(args[i + 1]);
+            }
+        }
+        return default_value.get();
     }
 
     public static void main(String[] args) throws IOException {
@@ -120,6 +128,34 @@ public class Main {
         var working_directory = Path.of(dirs.cacheDir);
         if (Files.notExists(working_directory)) {
             Files.createDirectories(working_directory);
+        }
+
+        {
+            var laf = getArg(args, "--laf", (e) -> {
+                if (e.equals("default")) {
+                    return UIManager.getSystemLookAndFeelClassName();
+                }
+                return e;
+            }, () -> FlatMacDarkLaf.class.getName());
+        
+            try {
+                UIManager.setLookAndFeel(laf);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // this is for nerds who just want to see the NBT data
+        try {
+            var nbt = getArg(args, "--nbt-view", 
+                ((Function<String, Path>)Path::of).andThen(Path::toFile), // i am very funny
+                () -> { throw new NoSuchElementException(); }
+            );
+
+            new NBTView(nbt, null);
+
+            return;
+        } catch (NoSuchElementException e) { // ignore
         }
 
         var cache_file = working_directory.resolve("cache.json");
@@ -168,10 +204,6 @@ public class Main {
         }
 
         var has_save = save_finders.stream().filter(e -> !e.getSavesPaths().isEmpty()).toList();
-
-        if (!hasArg(args, "--default-laf")) {
-            FlatMacDarkLaf.setup();
-        }
 
         Path saves_path;
         if (has_save.size() == 0) {
@@ -480,10 +512,20 @@ public class Main {
                     List<File> dropped_files = (List<File>) evt.getTransferable()
                             .getTransferData(DataFlavor.javaFileListFlavor);
                     Thread.ofPlatform().start(() -> {
-                        if (dropped_files.isEmpty()) {
+                        var list = dropped_files.stream().parallel().filter((e) -> {
+                            if (e.getName().endsWith(".dat") || e.getName().endsWith(".dat_old")) {
+                                try {
+                                    new NBTView(e, Main.this);
+                                } catch (IOException e1) {
+                                }
+                                return false;
+                            }
+                            return true;
+                        }).toList();
+                        if (list.isEmpty()) {
                             return;
                         }
-                        importWorlds(dropped_files);
+                        importWorlds(list);
                     });
                     evt.dropComplete(true);
                 } catch (Exception ex) {
