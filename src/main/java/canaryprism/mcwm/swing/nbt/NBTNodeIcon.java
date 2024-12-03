@@ -14,6 +14,7 @@ public enum NBTNodeIcon {
     long_icon("long.png"),
     short_icon("short.png"),
     string_icon("string.png"),
+    end_icon("end.png"),
     tag_icon("tag.png"),
     named_tag_icon("named.png");
 

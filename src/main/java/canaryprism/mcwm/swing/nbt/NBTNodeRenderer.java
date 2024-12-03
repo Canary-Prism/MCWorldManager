@@ -124,7 +124,7 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
                         if (list_tag.getTypeClass() != EndTag.class) {
                             copy = list_tag.getTypeClass().getDeclaredConstructor().newInstance();
                         } else {
-                            copy = new Object();
+                            copy = EndTag.INSTANCE;
                         }
                     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
                             | InvocationTargetException | NoSuchMethodException | SecurityException e) {
@@ -145,6 +145,8 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
                     case CompoundTag _ -> compound_icon;
                     case IntArrayTag _ -> int_array_icon;
                     case LongArrayTag _ -> long_array_icon;
+
+                    case EndTag _ -> end_icon;
     
                     case Byte _ -> byte_icon;
                     case Integer _ -> int_icon;
