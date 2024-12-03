@@ -1,5 +1,6 @@
 package canaryprism.mcwm;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -19,11 +20,8 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -32,6 +30,7 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -77,12 +76,6 @@ import canaryprism.mcwm.swing.savedir.SaveDirectoryView;
 import canaryprism.mcwm.swing.savedir.SaveFinderView;
 import dev.dirs.ProjectDirectories;
 
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Desktop;
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
@@ -116,6 +109,10 @@ public class Main {
     public static void main(String[] args) throws IOException {
 
         final var dirs = ProjectDirectories.from("", "canaryprism", "mcwm");
+        
+        final var icon = ImageIO.read(Objects.requireNonNull(Main.class.getResource("/mcwm/icon.png")));
+        if (Taskbar.isTaskbarSupported())
+            Taskbar.getTaskbar().setIconImage(icon);
 
         final var save_finders = List.of(
             new Vanilla(),
