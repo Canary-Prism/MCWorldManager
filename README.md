@@ -6,7 +6,7 @@ totally didn't just make this because i got tired of hearing people ask how to d
 
 for more information about different launchers and their support see [Launchers.md](https://github.com/Canary-Prism/MCWorldManager/blob/main/Launchers.md)
 
-NBT tag icons by Squidguset
+NBT tag and taskbar icons by Squidguset
 
 ### [Download](https://github.com/Canary-Prism/MCWorldManager/releases/)
 
@@ -30,6 +30,10 @@ This program uses Java 22 bc i'm weird like that
 
 
 ## Historical Changelog
+
+### 2.5.0
+- added support for EndTag
+- added taskbar icon
 
 ### 2.4.11
 - added commandline args `--laf <classname>` and `--nbt-view <file>`
