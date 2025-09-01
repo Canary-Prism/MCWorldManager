@@ -2,21 +2,23 @@
 # https://docs.gradle.org/current/userguide/platforms.html#sub::toml-dependencies-format
 
 [versions]
-com-formdev-flatlaf = "3.3"
-com-github-querz-nbt = "6.1"
-com-github-vincentrussell-java-ini-parser = "1.6"
-dev-dirs-directories = "26"
-junit-junit = "4.11"
-org-apache-commons-commons-compress = "1.27.0"
-org-apache-commons-commons-text = "1.12.0"
+flatlaf = "3.3"
+querz-nbt = "6.1"
+directories = "26"
+
+commons-text = "1.14.0"
 org-json-json = "20240303"
 
+junit = "5.10.0"
+
+
 [libraries]
-com-formdev-flatlaf = { module = "com.formdev:flatlaf", version.ref = "com-formdev-flatlaf" }
-com-github-querz-nbt = { module = "com.github.Querz:NBT", version.ref = "com-github-querz-nbt" }
-com-github-vincentrussell-java-ini-parser = { module = "com.github.vincentrussell:java-ini-parser", version.ref = "com-github-vincentrussell-java-ini-parser" }
-dev-dirs-directories = { module = "dev.dirs:directories", version.ref = "dev-dirs-directories" }
-junit-junit = { module = "junit:junit", version.ref = "junit-junit" }
-org-apache-commons-commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "org-apache-commons-commons-compress" }
-org-apache-commons-commons-text = { module = "org.apache.commons:commons-text", version.ref = "org-apache-commons-commons-text" }
+flatlaf = { module = "com.formdev:flatlaf", version.ref = "flatlaf" }
+querz-nbt = { module = "com.github.Querz:NBT", version.ref = "querz-nbt" }
+directories = { module = "dev.dirs:directories", version.ref = "directories" }
+vfs2nio = { module = "org.aksw.thirdparty.com.sshtools:vfs2nio" }
+commons-text = { module = "org.apache.commons:commons-text", version.ref = "commons-text" }
 org-json-json = { module = "org.json:json", version.ref = "org-json-json" }
+
+junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }

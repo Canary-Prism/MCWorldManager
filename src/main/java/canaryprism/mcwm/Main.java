@@ -11,14 +11,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
+import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.List;
@@ -105,10 +98,11 @@ public class Main {
         }
         return default_value.get();
     }
+    
+    private static final ProjectDirectories dirs = ProjectDirectories.from("", "canaryprism", "mcwm");
+    
 
     public static void main(String[] args) throws IOException {
-
-        final var dirs = ProjectDirectories.from("", "canaryprism", "mcwm");
         
         final var icon = ImageIO.read(Objects.requireNonNull(Main.class.getResource("/mcwm/icon.png")));
         if (Taskbar.isTaskbarSupported())

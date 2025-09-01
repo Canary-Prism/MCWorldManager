@@ -8,7 +8,7 @@ plugins {
 
 group = "canaryprism.mcwm"
 version = "2.5.0"
-description = "MCWorldManager"
+description = "Minecraft World Manager"
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(22)
@@ -20,19 +20,12 @@ repositories {
 }
 
 dependencies {
-    api(libs.com.formdev.flatlaf)
-    api(libs.org.apache.commons.commons.compress)
-    api(libs.org.apache.commons.commons.text)
-    api(libs.com.github.querz.nbt)
-    api(libs.org.json.json)
-    api(libs.dev.dirs.directories)
-    testImplementation(libs.junit.junit)
-}
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
 
-tasks.withType<JavaCompile>() {
-    options.encoding = "UTF-8"
-}
-
-tasks.withType<Javadoc>() {
-    options.encoding = "UTF-8"
+    implementation(libs.flatlaf)
+    implementation(libs.commons.text)
+    implementation(libs.querz.nbt)
+    implementation(libs.org.json.json)
+    implementation(libs.directories)
 }

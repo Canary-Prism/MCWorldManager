@@ -1,0 +1,220 @@
+name: "JPackage Build"
+run-name: "JPackage Build for ${{ github.event.release.tag_name }}"
+
+on:
+  release:
+    types: [ published ]
+env:
+  JAVA_VERSION: "22"
+jobs:
+  build_mac_arm64:
+    name: "JPackage Build for Mac arm64"
+    runs-on: "macos-latest"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+      - name: "Set up Java"
+        uses: "actions/setup-java@v5"
+        with:
+          java-version: "${{ env.JAVA_VERSION }}"
+          distribution: "temurin"
+      - name: "Setup Gradle"
+        uses: "gradle/actions/setup-gradle@v4"
+      - name: "Build Java"
+        shell: "bash"
+        run: "./gradlew release"
+      - name: "JPackage Mac"
+        id: "jpackage"
+        shell: "bash"
+        run: |
+          cd build/release
+          mkdir package
+          . info.env
+          jpackage "@args" --about-url "${{ github.server_url }}/${{ github.repository }}" -t dmg --mac-package-identifier "${NAME}" -d package
+          mv "$(find package -type f)" "$(pwd)/package/${NAME}-${VERSION}-arm64.dmg"
+      - name: "Upload Artifact to Release"
+        uses: "softprops/action-gh-release@v2"
+        if: "github.ref_type == 'tag'"
+        with:
+          files: "build/release/package/*"
+          token: "${{ secrets.TOKEN }}"
+  build_mac_x86_64:
+    name: "JPackage Build for Mac x86_64"
+    runs-on: "macos-13"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+      - name: "Set up Java"
+        uses: "actions/setup-java@v5"
+        with:
+          java-version: "${{ env.JAVA_VERSION }}"
+          distribution: "temurin"
+      - name: "Setup Gradle"
+        uses: "gradle/actions/setup-gradle@v4"
+      - name: "Build Java"
+        shell: "bash"
+        run: "./gradlew release"
+      - name: "JPackage Mac"
+        id: "jpackage"
+        shell: "bash"
+        run: |
+          cd build/release
+          mkdir package
+          . info.env
+          jpackage "@args" --about-url "${{ github.server_url }}/${{ github.repository }}" -t dmg --mac-package-identifier "${NAME}" -d package
+          mv "$(find package -type f)" "$(pwd)/package/${NAME}-${VERSION}-x86_64.dmg"
+      - name: "Upload Artifact to Release"
+        uses: "softprops/action-gh-release@v2"
+        if: "github.ref_type == 'tag'"
+        with:
+          files: "build/release/package/*"
+          token: "${{ secrets.TOKEN }}"
+  build_windows:
+    name: "JPackage Build for Windows"
+    runs-on: "windows-latest"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+      - name: "Set up Java"
+        uses: "actions/setup-java@v5"
+        with:
+          java-version: "${{ env.JAVA_VERSION }}"
+          distribution: "temurin"
+      - name: "Setup Gradle"
+        uses: "gradle/actions/setup-gradle@v4"
+      - name: "Build Java"
+        shell: "bash"
+        run: "./gradlew release"
+      - name: "JPackage Windows"
+        id: "jpackage"
+        shell: "bash"
+        run: |
+          cd build/release
+          mkdir package
+          jpackage "@args" --about-url "${{ github.server_url }}/${{ github.repository }}" -t msi --win-dir-chooser --win-menu --win-shortcut -d package
+          . info.env
+          mv "$(find package -type f)" "$(pwd)/package/${NAME}-${VERSION}-x86_64.msi"
+      - name: "Upload Artifact to Release"
+        uses: "softprops/action-gh-release@v2"
+        if: "github.ref_type == 'tag'"
+        with:
+          files: "build/release/package/*"
+          token: "${{ secrets.TOKEN }}"
+  build_linux_x86_64:
+    name: "JPackage Build for Linux x86_64"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+      - name: "Set up Java"
+        uses: "actions/setup-java@v5"
+        with:
+          java-version: "${{ env.JAVA_VERSION }}"
+          distribution: "temurin"
+      - name: "Setup Gradle"
+        uses: "gradle/actions/setup-gradle@v4"
+      - name: "Setup AppImageTool"
+        run: |
+          wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O ~/appimagetool
+           chmod +x ~/appimagetool
+      - name: "Install FUSE"
+        run: |
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt install libfuse2t64
+      - name: "Build Java"
+        shell: "bash"
+        run: "./gradlew release"
+      - name: "JPackage Windows"
+        id: "jpackage"
+        shell: "bash"
+        run: |
+          cd build/release
+          mkdir package
+          jpackage "@args" -t app-image -d package
+          . info.env
+          cd package
+          mkdir usr
+          mv "${NAME}"/* usr
+          mv usr $NAME
+          cd $NAME
+          ln -s "usr/bin/${NAME}" AppRun
+          chmod +x AppRun
+          IMAGE_NAME="$(basename "$(find usr/lib -type f -name "${NAME}*")")"
+          ln -s "usr/lib/${IMAGE_NAME}" $IMAGE_NAME
+          echo "[Desktop Entry]" > "${NAME}.desktop"
+          echo "Name=$NAME" >> "${NAME}.desktop"
+          echo "Exec=${NAME}" >> "${NAME}.desktop"
+          echo "Icon=${NAME}" >> "${NAME}.desktop"
+          echo "Type=Application" >> "${NAME}.desktop"
+          echo "Categories=Utility;" >> "${NAME}.desktop"
+          cd ..
+          ~/appimagetool $NAME
+          rm -rf $NAME
+          mv "$(find . -type f)" "${NAME}-${VERSION}-x86_64.AppImage"
+
+      - name: "Upload Artifact to Release"
+        uses: "softprops/action-gh-release@v2"
+        if: "github.ref_type == 'tag'"
+        with:
+          files: "build/release/package/*"
+          token: "${{ secrets.TOKEN }}"
+  build_linux_arm64:
+    name: "JPackage Build for Linux arm64"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+      - name: "Set up Java"
+        uses: "actions/setup-java@v5"
+        with:
+          java-version: "${{ env.JAVA_VERSION }}"
+          distribution: "temurin"
+      - name: "Setup Gradle"
+        uses: "gradle/actions/setup-gradle@v4"
+      - name: "Setup AppImageTool"
+        run: |
+          wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -O ~/appimagetool
+           chmod +x ~/appimagetool
+      - name: "Install FUSE"
+        run: |
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt install libfuse2t64
+      - name: "Build Java"
+        shell: "bash"
+        run: "./gradlew release"
+      - name: "JPackage Windows"
+        id: "jpackage"
+        shell: "bash"
+        run: |
+          cd build/release
+          mkdir package
+          jpackage "@args" -t app-image -d package
+          . info.env
+          cd package
+          mkdir usr
+          mv "${NAME}"/* usr
+          mv usr $NAME
+          cd $NAME
+          ln -s "usr/bin/${NAME}" AppRun
+          chmod +x AppRun
+          IMAGE_NAME="$(basename "$(find usr/lib -type f -name "${NAME}*")")"
+          ln -s "usr/lib/${IMAGE_NAME}" $IMAGE_NAME
+          echo "[Desktop Entry]" > "${NAME}.desktop"
+          echo "Name=$NAME" >> "${NAME}.desktop"
+          echo "Exec=${NAME}" >> "${NAME}.desktop"
+          echo "Icon=${NAME}" >> "${NAME}.desktop"
+          echo "Type=Application" >> "${NAME}.desktop"
+          echo "Categories=Utility;" >> "${NAME}.desktop"
+          cd ..
+          ~/appimagetool $NAME
+          rm -rf $NAME
+          mv "$(find . -type f)" "${NAME}-${VERSION}-x86_64.AppImage"
+
+      - name: "Upload Artifact to Release"
+        uses: "softprops/action-gh-release@v2"
+        if: "github.ref_type == 'tag'"
+        with:
+          files: "build/release/package/*"
+          token: "${{ secrets.TOKEN }}"
