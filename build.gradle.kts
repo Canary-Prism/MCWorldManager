@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "canaryprism.mcwm"
-version = "3.0.0"
+version = "3.0.1"
 description = "Minecraft World Manager"
 
 application {

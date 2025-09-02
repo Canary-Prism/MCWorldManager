@@ -31,6 +31,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 3.0.1
+- forgot to update the version shown in the program hehe
+- also broke configuration cache in gradle so whoops
+
 ### 3.0.0
 - rewrote a lot a lot of stuff
 - you can now have multiple instances open at once in the tabbed pane
