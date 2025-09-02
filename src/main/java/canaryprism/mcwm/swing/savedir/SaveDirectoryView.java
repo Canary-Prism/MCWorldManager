@@ -5,7 +5,7 @@ import java.awt.Image;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 
-import canaryprism.mcwm.savedir.SaveDirectory;
+import canaryprism.mcwm.instance.SaveDirectory;
 import canaryprism.mcwm.swing.file.UnknownFile;
 
 public class SaveDirectoryView extends JComponent {

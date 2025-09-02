@@ -1,6 +1,12 @@
-package canaryprism.mcwm.savedir.launcher;
+package canaryprism.mcwm.instance.launcher;
 
-import java.awt.Image;
+import canaryprism.mcwm.instance.InstanceFinder;
+import canaryprism.mcwm.instance.SaveDirectory;
+import org.apache.commons.configuration2.INIConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -13,13 +19,6 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 
-import javax.imageio.ImageIO;
-
-import com.github.vincentrussell.ini.Ini;
-
-import canaryprism.mcwm.savedir.SaveDirectory;
-import canaryprism.mcwm.savedir.SaveFinder;
-
 
 /**
  * the MultiMC launcher save finder
@@ -30,7 +29,7 @@ import canaryprism.mcwm.savedir.SaveFinder;
  * <p>
  * i hate this practise and i hate multimc for doing this
  */
-public class MultiMC implements SaveFinder {
+public final class MultiMC implements InstanceFinder {
 
     private static final Optional<Image> icon;
     static {
@@ -238,6 +237,7 @@ public class MultiMC implements SaveFinder {
     }
 
     private void load(Path instances) {
+        saves_path.clear();
         try {
             Files.list(instances)
                 .filter(Files::isDirectory)
@@ -251,12 +251,12 @@ public class MultiMC implements SaveFinder {
                     }
                     String name;
                     try {
-                        var ini = new Ini();
-                        ini.load(e.resolve("instance.cfg").toFile()); // i'm not sure using File instead of NIO is a good idea
+                        var ini = new INIConfiguration();
+                        ini.read(Files.newBufferedReader(e.resolve("instance.cfg"))); // i'm not sure using File instead of NIO is a good idea
                         
-                        name = (String) ini.getSection("_NO_SECTION").getOrDefault("name", e.getFileName().toString());
+                        name = (String) ini.getSection("_NO_SECTION").getString("name", e.getFileName().toString());
                         // name = (String) ini.getSection("General").getOrDefault("name", e.getFileName().toString());
-                    } catch (IOException | ClassCastException | NullPointerException ex) {
+                    } catch (IOException | ClassCastException | NullPointerException | ConfigurationException ex) {
                         name = e.getFileName().toString();
                     }
                     return new SaveDirectory(
@@ -274,16 +274,17 @@ public class MultiMC implements SaveFinder {
     }
 
     private volatile Path cache_path;
-
+    
     @Override
-    public Optional<Path> toCache() {
-        return Optional.ofNullable(cache_path);
+    public void writeCache(Path path) throws IOException {
+        Files.writeString(path, cache_path.toString());
     }
-
+    
     @Override
-    public void loadCache(Path path) {
-        if (Files.isDirectory(path))
-            load(path);
+    public void loadCache(Path path) throws IOException {
+        var launcher_path = Path.of(Files.readString(path));
+        if (Files.isDirectory(launcher_path))
+            load(launcher_path);
     }
 
     @Override

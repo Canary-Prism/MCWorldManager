@@ -1,11 +1,23 @@
-package canaryprism.mcwm.savedir;
+package canaryprism.mcwm.instance;
 
-import java.awt.Image;
+import java.awt.*;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
-public interface SaveFinder {
+import static org.apache.commons.lang3.SystemUtils.*;
+
+public interface InstanceFinder {
+    
+    default void find() {
+        if (IS_OS_MAC)
+            findMac();
+        else if (IS_OS_WINDOWS)
+            findWindows();
+        else if (IS_OS_LINUX)
+            findLinux();
+    }
 
     /**
      * attempt to find the saves directory for Windows
@@ -44,23 +56,18 @@ public interface SaveFinder {
 
 
     /**
-     * 
-     * returns the path to be cached for the saves directory
-     * the same path will be passed to loadFromCache() to load the saves directory
-     * this is used to save the saves directory between runs to avoid having to search for it again
-     * 
-     * @return the path to be cached
+     * writes the cache to the passed path
+     *
+     * @param path the path to the cache file
      */
-    default Optional<Path> toCache() {
-        return Optional.empty();
-    };
+    default void writeCache(Path path) throws IOException {}
 
     /**
      * loads the saves directory from the cache
      * 
-     * @param cachePath the path to the cache
+     * @param path the path to the cache file
      */
-    default void loadCache(Path path) {}
+    default void loadCache(Path path) throws IOException {}
 
 
     /**

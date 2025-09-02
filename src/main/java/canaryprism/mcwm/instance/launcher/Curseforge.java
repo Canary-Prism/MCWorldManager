@@ -1,7 +1,9 @@
-package canaryprism.mcwm.savedir.launcher;
+package canaryprism.mcwm.instance.launcher;
 
-import java.awt.Desktop;
-import java.awt.Image;
+import canaryprism.mcwm.instance.InstanceFinder;
+import canaryprism.mcwm.instance.SaveDirectory;
+
+import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -9,31 +11,28 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.IntFunction;
 
-import canaryprism.mcwm.savedir.SaveDirectory;
-import canaryprism.mcwm.savedir.SaveFinder;
-
 /**
  * nobody likes curseforge
  * <p>
  * fuck you curseforge
  */
-public class Curseforge implements SaveFinder {
+public final class Curseforge implements InstanceFinder {
 
-    private volatile boolean has = false;
+    private static volatile boolean has = false;
 
     @Override
     public void findWindows() {
-        find();
+        findAny();
     }
 
     @Override
     public void findMac() {
-        find();
+        findAny();
     }
 
     @Override
     public void findLinux() {
-        find();
+        findAny();
     }
 
     /**
@@ -41,7 +40,7 @@ public class Curseforge implements SaveFinder {
      * <p>
      * worst case this option just never shows up, which is good enough
      */
-    private void find() {
+    private void findAny() {
         var home = System.getProperty("user.home");
 
         var path = Path.of(home, "curseforge");
@@ -53,17 +52,17 @@ public class Curseforge implements SaveFinder {
 
     @Override
     public List<SaveDirectory> getSavesPaths() {
-        return new ArrayList<SaveDirectory>() {
+        return new ArrayList<>() {
             @Override
             public int size() {
                 return 2;
             }
-
+            
             @Override
             public boolean isEmpty() {
                 return !has;
             }
-
+            
             @Override
             public <E> E[] toArray(IntFunction<E[]> generator) {
                 if (Desktop.isDesktopSupported()) {

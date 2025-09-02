@@ -33,9 +33,14 @@ dependencies {
 
     implementation(libs.flatlaf)
     implementation(libs.commons.text)
+    implementation(libs.commons.io)
+    implementation(libs.commons.configuration2)
     implementation(libs.querz.nbt)
     implementation(libs.org.json.json)
+
     implementation(libs.directories)
+
+    runtimeOnly(libs.vfs2nio)
 }
 
 

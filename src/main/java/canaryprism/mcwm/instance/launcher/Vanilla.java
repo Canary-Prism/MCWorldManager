@@ -1,16 +1,15 @@
-package canaryprism.mcwm.savedir.launcher;
+package canaryprism.mcwm.instance.launcher;
 
-import java.awt.Image;
+import canaryprism.mcwm.instance.InstanceFinder;
+import canaryprism.mcwm.instance.SaveDirectory;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-import javax.imageio.ImageIO;
-
-import canaryprism.mcwm.savedir.SaveDirectory;
-import canaryprism.mcwm.savedir.SaveFinder;
 
 
 /**
@@ -21,7 +20,7 @@ import canaryprism.mcwm.savedir.SaveFinder;
  * <p>
  * this makes my job pretty easy
  */
-public class Vanilla implements SaveFinder {
+public final class Vanilla implements InstanceFinder {
 
     private static final Optional<Image> icon;
     static {
@@ -43,7 +42,7 @@ public class Vanilla implements SaveFinder {
         try {
             var path = Path.of(appdata, ".minecraft", "saves");
             if (Files.exists(path))
-                saves_path.add(new SaveDirectory(Optional.empty(), getLauncherName(), path));
+                saves_path.add(new SaveDirectory(icon, getLauncherName(), path));
         } catch (Exception e) {
         }
     }
@@ -54,7 +53,7 @@ public class Vanilla implements SaveFinder {
         try {
             var path = Path.of(home, "Library", "Application Support", "minecraft", "saves");
             if (Files.exists(path))
-                saves_path.add(new SaveDirectory(Optional.empty(), getLauncherName(), path));
+                saves_path.add(new SaveDirectory(icon, getLauncherName(), path));
         } catch (Exception e) {
         }   
     }
@@ -65,16 +64,7 @@ public class Vanilla implements SaveFinder {
         try {
             var path = Path.of(home, ".minecraft", "saves");
             if (Files.exists(path))
-                saves_path.add(new SaveDirectory(Optional.empty(), getLauncherName(), path));
-        } catch (Exception e) {
-        }
-    }
-
-    @Override
-    public void loadCache(Path path) {
-        try {
-            if (Files.exists(path))
-                saves_path.add(new SaveDirectory(Optional.empty(), getLauncherName(), path));
+                saves_path.add(new SaveDirectory(icon, getLauncherName(), path));
         } catch (Exception e) {
         }
     }

@@ -1,4 +1,4 @@
-package canaryprism.mcwm.savedir;
+package canaryprism.mcwm.instance;
 
 import java.awt.Image;
 import java.nio.file.Path;

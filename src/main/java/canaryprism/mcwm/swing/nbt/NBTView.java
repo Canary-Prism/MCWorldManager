@@ -1,13 +1,17 @@
 package canaryprism.mcwm.swing.nbt;
 
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import canaryprism.mcwm.swing.SaveView;
+import net.querz.nbt.io.NBTUtil;
+import net.querz.nbt.io.NamedTag;
+import net.querz.nbt.tag.*;
+import org.apache.commons.text.StringEscapeUtils;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentListener;
+import javax.swing.tree.*;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -19,49 +23,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.DropMode;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
-import javax.swing.JTree;
-import javax.swing.event.DocumentListener;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
-
-import org.apache.commons.text.StringEscapeUtils;
-
-import javax.swing.border.EmptyBorder;
-
-import canaryprism.mcwm.Main;
-import net.querz.nbt.io.NBTUtil;
-import net.querz.nbt.io.NamedTag;
-import net.querz.nbt.tag.ByteArrayTag;
-import net.querz.nbt.tag.ByteTag;
-import net.querz.nbt.tag.CompoundTag;
-import net.querz.nbt.tag.DoubleTag;
-import net.querz.nbt.tag.EndTag;
-import net.querz.nbt.tag.FloatTag;
-import net.querz.nbt.tag.IntArrayTag;
-import net.querz.nbt.tag.IntTag;
-import net.querz.nbt.tag.ListTag;
-import net.querz.nbt.tag.LongArrayTag;
-import net.querz.nbt.tag.LongTag;
-import net.querz.nbt.tag.ShortTag;
-import net.querz.nbt.tag.StringTag;
-import net.querz.nbt.tag.Tag;
-
 
 /**
  * this is probably the worst code I've ever written
@@ -69,14 +30,14 @@ import net.querz.nbt.tag.Tag;
  */
 public class NBTView {
     private final JFrame frame;
-    private final Main main;
+    private final SaveView save_view;
     private final File file;
     private final NamedTag nbt;
     private final DefaultMutableTreeNode root;
 
-    public NBTView(File file, Main main) throws IOException {
+    public NBTView(File file, SaveView save_view) throws IOException {
         this.frame = new JFrame("NBT Viewer");
-        this.main = main;
+        this.save_view = save_view;
         this.file = file;
         this.nbt = NBTUtil.read(file);
 
@@ -756,15 +717,15 @@ public class NBTView {
         var nbt = reconstructNbt(this.nbt, this.root);
 
         NBTUtil.write(nbt, file);
-        if (main != null)
-            main.reloadAllWorlds();
+        if (save_view != null)
+            save_view.reloadAllWorlds();
     }
 
     public void close() {
         frame.dispose();
 
-        if (main != null)
-            main.reloadAllWorlds();
+        if (save_view != null)
+            save_view.reloadAllWorlds();
     }
 
     enum TagType {

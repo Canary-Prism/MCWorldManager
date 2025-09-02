@@ -1,19 +1,19 @@
-package canaryprism.mcwm.savedir.launcher;
+package canaryprism.mcwm.instance.launcher;
 
-import java.awt.Image;
+import canaryprism.mcwm.instance.InstanceFinder;
+import canaryprism.mcwm.instance.SaveDirectory;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import javax.imageio.ImageIO;
-
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import canaryprism.mcwm.savedir.SaveDirectory;
-import canaryprism.mcwm.savedir.SaveFinder;
 
 
 /**
@@ -22,7 +22,7 @@ import canaryprism.mcwm.savedir.SaveFinder;
  * this class is responsible for finding the saves directory of the Modrinth launcher,
  * which is like vanilla and only has one save directory per platform, hooray
  */
-public class Modrinth implements SaveFinder {
+public final class Modrinth implements InstanceFinder {
     private static final Optional<Image> icon;
     static {
         Optional<Image> temp_icon;
@@ -47,7 +47,7 @@ public class Modrinth implements SaveFinder {
         default_world_icon = temp_icon;
     }
 
-    private final List<SaveDirectory> saves_path = new ArrayList<>();
+    private final List<SaveDirectory> saves_path = Collections.synchronizedList(new ArrayList<>());
 
     @Override
     public synchronized void findWindows() {
@@ -111,6 +111,7 @@ public class Modrinth implements SaveFinder {
 
         // this is by far my favourite launcher just because of how easy it is to find the saves
 
+        saves_path.clear();
         var instances = modrinth.resolve("profiles");
         if (Files.isDirectory(instances)) {
             try {
@@ -147,16 +148,17 @@ public class Modrinth implements SaveFinder {
     }
 
     private volatile Path cache_path;
-
+    
     @Override
-    public Optional<Path> toCache() {
-        return Optional.ofNullable(cache_path);
+    public void writeCache(Path path) throws IOException {
+        Files.writeString(path, cache_path.toString());
     }
-
+    
     @Override
-    public void loadCache(Path path) {
-        if (Files.isDirectory(path))
-            load(path);
+    public void loadCache(Path path) throws IOException {
+        var launcher_path = Path.of(Files.readString(path));
+        if (Files.isDirectory(launcher_path))
+            load(launcher_path);
     }
 
 

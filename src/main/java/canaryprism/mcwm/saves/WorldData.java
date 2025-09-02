@@ -1,123 +1,53 @@
 package canaryprism.mcwm.saves;
 
-import java.awt.Image;
-import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
+import canaryprism.mcwm.Main;
+import net.querz.nbt.io.NBTDeserializer;
+import net.querz.nbt.tag.CompoundTag;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.HashMap;
 import java.util.Optional;
-
-import javax.imageio.ImageIO;
-
-import org.apache.commons.compress.archivers.ArchiveEntry;
-import org.apache.commons.compress.archivers.ArchiveException;
-import canaryprism.mcwm.Main;
-import net.querz.nbt.io.NBTDeserializer;
-import net.querz.nbt.tag.CompoundTag;
 
 public record WorldData(Optional<Image> image, String worldName, String dirName, LocalDateTime lastPlayed, Gamemode gamemode, boolean cheats, boolean experimental, String version) {
     
-    public static WorldData parse(Path file) throws ParsingException {
-        try {
-            if (Files.isDirectory(file)) {
-                var level_dat = file.resolve("level.dat");
-                var icon = file.resolve("icon.png");
-                try {
-                    if (Files.exists(icon)) {
-                        try (
-                            var icon_stream = Files.newInputStream(icon);
-                            var level_dat_stream = Files.newInputStream(level_dat)
-                        ) {
-                            return parse(icon_stream, level_dat_stream, file.getFileName().toString());
-                        }
-                    } else {
-                        try (var level_dat_stream = Files.newInputStream(level_dat)) {
-                            return parse(InputStream.nullInputStream(), level_dat_stream, file.getFileName().toString());
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new ParsingException("No world (level.dat) file found in folder", e, "Not a Minecraft world");
-                }
-            } else {
-                byte[] imgbuffer = {}, levelbuffer = null;
-                String dir_name = null;
-                boolean found_level = false;
-                boolean found_icon = false;
-                var images = new HashMap<String, byte[]>();
-                try (
-                    var fis = new BufferedInputStream(Files.newInputStream(file));
-                    var i = Main.createArchiveInputStream(fis);
-                ) {
-                    ArchiveEntry entry = null;
-                    while ((entry = i.getNextEntry()) != null) {
-                        if (!i.canReadEntryData(entry)) {
-                            // log something?
-                            continue;
-                        }
-
-                        var split = entry.getName().split("/");
-                        var name = split[split.length - 1];
-                        
-                        // i want to determine the directory of the world by where the level.dat file is
-                        // so it works even if the world is in a subdirectory
-                        if (name.equals("level.dat")) {
-                            if (found_level) {
-                                throw new ParsingException("Multiple worlds (level.dat) files found in archive", "Archive potentially malformed or contains multiple worlds");
-                            }
-                            found_level = true;
-                            levelbuffer = i.readAllBytes();
-                            try {
-                                dir_name = entry.getName().substring(0, entry.getName().length() - name.length() - 1);
-                            } catch (StringIndexOutOfBoundsException e) {
-                                dir_name = ""; // this means the level.dat file is in the root of the archive
-                            }
-                        } else if (name.equals("icon.png")) {
-                            if (!found_icon) {
-                                images.put(entry.getName(), i.readAllBytes());
-                                if (found_level) {
-                                    if (images.containsKey(dir_name + "/icon.png")) {
-                                        imgbuffer = images.get(dir_name + "/icon.png");
-                                        found_icon = true;
-                                        // images.clear();
-                                        images = null;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    if (found_level) {
-                        // try just one more time to get the icon
-                        if (!found_icon) {
-                            if (images.containsKey(dir_name + "/icon.png")) {
-                                imgbuffer = images.get(dir_name + "/icon.png");
-                                found_icon = true;
-                                // images.clear();
-                                images = null;
-                            }
-                        }
-
-                        try (
-                            var imgstream = new ByteArrayInputStream(imgbuffer);
-                            var levelstream = new ByteArrayInputStream(levelbuffer);
-                        ) {
-                            return parse(imgstream, levelstream, dir_name);
-                        }
-                    } else {
-                        throw new ParsingException("No world (level.dat) file found in archive", "Archive potentially malformed or does not contain a world");
-                    }
-                }
-            } 
-        } catch (FileNotFoundException | ArchiveException e) {
-            throw new ParsingException("Failed to parse world data", e, "Not a Minecraft world");
+    public static WorldData parse(Path path) throws ParsingException {
+        var world_path = findWorldPath(path);
+        var level_dat = path.resolve("level.dat");
+        var icon = path.resolve("icon.png");
+        try (var icon_stream = Files.exists(icon) ? Files.newInputStream(icon) : InputStream.nullInputStream();
+             var level_stream = Files.newInputStream(level_dat)) {
+            return parse(icon_stream, level_stream, Optional.ofNullable(path.getFileName()).map(Path::toString).orElse(""));
         } catch (IOException e) {
+            throw new ParsingException("Failed to read world archive data", e, "Potentially problematic file");
+        }
+    }
+    
+    public static Path findWorldPath(Path path) throws ParsingException {
+        if (Files.isDirectory(path))
+            return path;
+        
+        try (var fs = Main.createArchiveFileSystem(path);
+             var stream = Files.walk(fs.getRootDirectories().iterator().next())) {
+            var list = stream
+                    .filter(Files::isDirectory)
+                    .filter((e) -> Files.exists(e.resolve("level.dat")))
+                    .toList();
+            if (list.isEmpty())
+                throw new ParsingException("No world (level.dat) file found in archive", "Archive potentially malformed or does not contain a world");
+            
+            if (list.size() > 1)
+                throw new ParsingException("Multiple worlds (level.dat) files found in archive", "Archive potentially malformed or contains multiple worlds");
+            
+            return list.getFirst();
+        } catch (IOException | URISyntaxException e) {
             throw new ParsingException("Failed to read world archive data", e, "Potentially problematic file");
         }
     }

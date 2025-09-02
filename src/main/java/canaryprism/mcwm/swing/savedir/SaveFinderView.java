@@ -4,7 +4,7 @@ import java.awt.Image;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 
-import canaryprism.mcwm.savedir.SaveFinder;
+import canaryprism.mcwm.instance.InstanceFinder;
 import canaryprism.mcwm.swing.file.UnknownFile;
 
 public class SaveFinderView extends JComponent {
@@ -19,13 +19,13 @@ public class SaveFinderView extends JComponent {
     }
     
     
-    private final SaveFinder finder;
+    private final InstanceFinder finder;
 
-    public SaveFinderView(SaveFinder finder) {
+    public SaveFinderView(InstanceFinder finder) {
         this.finder = finder;
     }
 
-    public SaveFinder getFinder() {
+    public InstanceFinder getFinder() {
         return finder;
     }
 
