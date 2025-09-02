@@ -32,7 +32,7 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
         }
     }
     
-    private static Path findWorldPath(Path path) throws ParsingException {
+    public static Path findWorldPath(Path path) throws ParsingException {
         
         try (var stream = Files.walk(path)) {
             var list = stream

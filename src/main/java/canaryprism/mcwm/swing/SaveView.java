@@ -647,11 +647,10 @@ public class SaveView extends JComponent implements Closeable {
                     }
                 } else {
                     
-                    var is_root = data.dirName().isEmpty();
                     try (var fs = createArchiveFileSystem(input)) {
                         var root = fs.getRootDirectories().iterator().next();
                         
-                        var world_path = (is_root) ? root : getSubpathWithName(root, data.dirName()).orElseThrow();
+                        var world_path = WorldData.findWorldPath(root);
                         
                         PathUtils.copyDirectory(world_path, output);
                         
@@ -709,7 +708,7 @@ public class SaveView extends JComponent implements Closeable {
                 if (output == null) {
                     return;
                 }
-                output_path = path.resolve(output);
+                output_path = save_path.resolve(output);
                 if (Files.exists(output_path)) {
                     JOptionPane.showMessageDialog(this
                             , "Already exists, please pick another name", "Output Exists", JOptionPane.ERROR_MESSAGE);
@@ -718,11 +717,10 @@ public class SaveView extends JComponent implements Closeable {
                 }
             }
             
-            var is_root = loaded_file.data().dirName().isEmpty();
             try (var fs = createArchiveFileSystem(path)) {
                 var root = fs.getRootDirectories().iterator().next();
                 
-                var world_path = (is_root) ? root : getSubpathWithName(root, loaded_file.data().dirName()).orElseThrow();
+                var world_path = WorldData.findWorldPath(root);
                 
                 PathUtils.copyDirectory(world_path, output_path);
                 JOptionPane.showMessageDialog(null, "Expansion completed successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);

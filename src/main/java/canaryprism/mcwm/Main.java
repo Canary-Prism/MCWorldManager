@@ -528,17 +528,6 @@ public class Main {
         instances.setSelectedIndex(index);
     }
     
-    public static Optional<Path> getSubpathWithName(Path path, String name) {
-        try (var stream = Files.walk(path)) {
-            return stream
-                    .filter(Files::isDirectory)
-                    .filter((e) -> e.getFileName().toString().equals(name))
-                    .findAny();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-    
     public static FileSystem createArchiveFileSystem(Path path) throws URISyntaxException, IOException {
         var path_uri = path.toUri();
         var uri = new URI("vfs:" + extensionOf(path), path_uri.getRawSchemeSpecificPart(), null);
