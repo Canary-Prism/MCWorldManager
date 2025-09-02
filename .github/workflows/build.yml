@@ -138,6 +138,7 @@ jobs:
           choco install imagemagick -y
       - name: "Process Icon"
         if: "env.ICON_PATH != ''"
+        shell: "bash"
         run: |
           mkdir build/release/icon
           ICON_NAME="$(basename "${ICON_PATH}")"
