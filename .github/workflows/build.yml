@@ -197,7 +197,7 @@ jobs:
           cp $ICON_PATH "build/release/icon/${ICON_NAME}"
           cd build/release/
           echo "--icon icon/${ICON_NAME}" >> args
-      - name: "JPackage Windows"
+      - name: "JPackage Linux"
         id: "jpackage"
         shell: "bash"
         run: |
@@ -258,7 +258,7 @@ jobs:
         run: |
           ./gradlew jar
           ./gradlew release
-      - name: "JPackage Windows"
+      - name: "JPackage Linux"
         id: "jpackage"
         shell: "bash"
         run: |
