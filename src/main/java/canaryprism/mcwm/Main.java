@@ -402,8 +402,8 @@ public class Main {
                 var output_path = output.toPath();
 
                 try (var fs = FileSystems.newFileSystem(output_path, Map.of("create", true))) {
-                    var root = fs.getRootDirectories().iterator().next();
-                    PathUtils.copyDirectory(world_path, root.resolve(world_path.getFileName()));
+                    var root = fs.getPath("/");
+                    PathUtils.copyDirectory(world_path, root.resolve(world_path.getFileName().toString()));
                 } catch (IOException e) {
                     e.printStackTrace();
                     JOptionPane.showMessageDialog(frame, "Failed to export: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
