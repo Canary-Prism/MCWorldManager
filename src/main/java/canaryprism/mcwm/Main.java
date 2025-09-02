@@ -82,7 +82,7 @@ public class Main {
                     return UIManager.getSystemLookAndFeelClassName();
                 }
                 return e;
-            }, () -> FlatMacDarkLaf.class.getName());
+            }, FlatMacDarkLaf.class::getName);
         
             try {
                 UIManager.setLookAndFeel(laf);
