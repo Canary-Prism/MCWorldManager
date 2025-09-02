@@ -609,8 +609,8 @@ public class SaveView extends JComponent implements Closeable {
                 panel.add(display_panel);
                 
                 while (Files.exists(output) || outputs.containsValue(output)) {
-                    var new_name = JOptionPane.showInputDialog(this
-                            ,
+                    var new_name = JOptionPane.showInputDialog(
+                            this,
                             panel,
                             "New Name", JOptionPane.QUESTION_MESSAGE);
                     if (new_name == null) {
