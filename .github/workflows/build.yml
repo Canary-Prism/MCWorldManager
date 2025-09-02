@@ -23,7 +23,9 @@ jobs:
         uses: "gradle/actions/setup-gradle@v4"
       - name: "Build Java"
         shell: "bash"
-        run: "./gradlew release"
+        run: |
+          ./gradlew jar
+          ./gradlew release
       - name: "Process Icon"
         if: "env.ICON_PATH != ''"
         run: |
@@ -74,7 +76,9 @@ jobs:
         uses: "gradle/actions/setup-gradle@v4"
       - name: "Build Java"
         shell: "bash"
-        run: "./gradlew release"
+        run: |
+          ./gradlew jar
+          ./gradlew release
       - name: "Process Icon"
         if: "env.ICON_PATH != ''"
         run: |
@@ -125,7 +129,9 @@ jobs:
         uses: "gradle/actions/setup-gradle@v4"
       - name: "Build Java"
         shell: "bash"
-        run: "./gradlew release"
+        run: |
+          ./gradlew jar
+          ./gradlew release
       - name: "Install ImageMagick"
         if: "env.ICON_PATH != ''"
         run: |
@@ -179,7 +185,9 @@ jobs:
           sudo apt install libfuse2t64
       - name: "Build Java"
         shell: "bash"
-        run: "./gradlew release"
+        run: |
+          ./gradlew jar
+          ./gradlew release
       - name: "Process Icon"
         if: "env.ICON_PATH != ''"
         run: |
@@ -246,7 +254,9 @@ jobs:
           sudo apt install libfuse2t64
       - name: "Build Java"
         shell: "bash"
-        run: "./gradlew release"
+        run: |
+          ./gradlew jar
+          ./gradlew release
       - name: "JPackage Windows"
         id: "jpackage"
         shell: "bash"
