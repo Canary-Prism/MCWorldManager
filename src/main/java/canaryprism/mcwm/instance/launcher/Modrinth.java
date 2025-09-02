@@ -54,7 +54,7 @@ public class Modrinth implements SaveFinder {
 
         var appdata = System.getenv("APPDATA");
 
-        var path = Path.of(appdata, "ModrintApp");
+        var path = Path.of(appdata, "ModrinthApp");
         if (!Files.isDirectory(path)) {
             path = Path.of(appdata, "com.modrinth.theseus");
         }
