@@ -284,7 +284,7 @@ jobs:
           cd ..
           ~/appimagetool $NAME
           rm -rf $NAME
-          mv "$(find . -type f)" "${NAME}-${VERSION}-x86_64.AppImage"
+          mv "$(find . -type f)" "${NAME}-${VERSION}-arm64.AppImage"
 
       - name: "Upload Artifact to Release"
         uses: "softprops/action-gh-release@v2"
