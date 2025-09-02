@@ -19,23 +19,22 @@ import java.util.Optional;
 public record WorldData(Optional<Image> image, String worldName, String dirName, LocalDateTime lastPlayed, Gamemode gamemode, boolean cheats, boolean experimental, String version) {
     
     public static WorldData parse(Path path) throws ParsingException {
-        var world_path = findWorldPath(path);
-        var level_dat = path.resolve("level.dat");
-        var icon = path.resolve("icon.png");
-        try (var icon_stream = Files.exists(icon) ? Files.newInputStream(icon) : InputStream.nullInputStream();
-             var level_stream = Files.newInputStream(level_dat)) {
-            return parse(icon_stream, level_stream, Optional.ofNullable(path.getFileName()).map(Path::toString).orElse(""));
-        } catch (IOException e) {
+        try (var fs = (Files.isDirectory(path)) ? null : Main.createArchiveFileSystem(path)) {
+            var world_path = (fs != null) ? findWorldPath(fs.getRootDirectories().iterator().next()) : path;
+            var level_dat = world_path.resolve("level.dat");
+            var icon = world_path.resolve("icon.png");
+            try (var icon_stream = Files.exists(icon) ? Files.newInputStream(icon) : InputStream.nullInputStream();
+                 var level_stream = Files.newInputStream(level_dat)) {
+                return parse(icon_stream, level_stream, Optional.ofNullable(path.getFileName()).map(Path::toString).orElse(""));
+            }
+        } catch (IOException | URISyntaxException e) {
             throw new ParsingException("Failed to read world archive data", e, "Potentially problematic file");
         }
     }
     
-    public static Path findWorldPath(Path path) throws ParsingException {
-        if (Files.isDirectory(path))
-            return path;
+    private static Path findWorldPath(Path path) throws ParsingException {
         
-        try (var fs = Main.createArchiveFileSystem(path);
-             var stream = Files.walk(fs.getRootDirectories().iterator().next())) {
+        try (var stream = Files.walk(path)) {
             var list = stream
                     .filter(Files::isDirectory)
                     .filter((e) -> Files.exists(e.resolve("level.dat")))
@@ -47,7 +46,7 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
                 throw new ParsingException("Multiple worlds (level.dat) files found in archive", "Archive potentially malformed or contains multiple worlds");
             
             return list.getFirst();
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             throw new ParsingException("Failed to read world archive data", e, "Potentially problematic file");
         }
     }

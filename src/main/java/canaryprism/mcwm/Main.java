@@ -30,8 +30,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -542,9 +540,21 @@ public class Main {
     }
     
     public static FileSystem createArchiveFileSystem(Path path) throws URISyntaxException, IOException {
-        return FileSystems.newFileSystem(
-                new URI("vfs:file", "", URLEncoder.encode(path.toString(), StandardCharsets.UTF_8), null),
-                Map.of());
+        var path_uri = path.toUri();
+        var uri = new URI("vfs:" + extensionOf(path), path_uri.getRawSchemeSpecificPart(), null);
+        System.out.println(uri);
+        try {
+            return FileSystems.newFileSystem(uri, Map.of());
+        } catch (IllegalArgumentException e) {
+            throw new IOException(e);
+        }
+    }
+    
+    public static String extensionOf(Path path) {
+        var name = path.getFileName().toString();
+        var i = name.lastIndexOf('.');
+        
+        return (i != -1 && i != name.length() - 1) ? name.substring(i + 1) : "";
     }
 
     public void show() {
