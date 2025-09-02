@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 3.0.1-2
+- mhm
+
 ### 3.0.1-1
 - why am i so bad at github actions (no actual changes for the program)
 
