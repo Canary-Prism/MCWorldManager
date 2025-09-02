@@ -87,6 +87,7 @@ tasks.register("writeJPackageArgs") {
                     -i "${file("build/release/input").absolutePath}"
                     --main-jar ${tasks.jar.get().archiveFile.get().asFile}
                     --main-class ${application.mainClass.get()}
+                    
                 """.trimIndent()
             }}
         """.trimIndent())

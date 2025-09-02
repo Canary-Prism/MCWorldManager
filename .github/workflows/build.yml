@@ -45,7 +45,7 @@ jobs:
           sips -z 1024 1024   icon --out icon.iconset/icon_512x512@2x.png
           iconutil -c icns icon.iconset
           cd ..
-          echo "--icon icon/icon.icns" >> args
+          echo '--icon "icon/icon.icns"' >> args
       - name: "JPackage Mac"
         id: "jpackage"
         shell: "bash"
