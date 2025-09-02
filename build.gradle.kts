@@ -81,6 +81,10 @@ tasks.register("release") {
     dependsOn(tasks["gatherJars"], tasks["writeJPackageArgs"], tasks["writeInfo"])
 }
 
+tasks.shadowJar {
+    mergeServiceFiles()
+}
+
 tasks.test {
     useJUnitPlatform()
 }
