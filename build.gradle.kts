@@ -84,7 +84,7 @@ tasks.register("writeJPackageArgs") {
             } else {
                 """
                     -i "input"
-                    --main-jar ${tasks.jar.get().archiveFile.get().asFile}
+                    --main-jar ${tasks.jar.get().archiveFileName.get()}
                     --main-class ${application.mainClass.get()}
                     
                 """.trimIndent()
