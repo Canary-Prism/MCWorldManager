@@ -542,7 +542,6 @@ public class Main {
     public static FileSystem createArchiveFileSystem(Path path) throws URISyntaxException, IOException {
         var path_uri = path.toUri();
         var uri = new URI("vfs:" + extensionOf(path), path_uri.getRawSchemeSpecificPart(), null);
-        System.out.println(uri);
         try {
             return FileSystems.newFileSystem(uri, Map.of());
         } catch (IllegalArgumentException e) {
