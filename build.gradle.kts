@@ -53,6 +53,7 @@ tasks.register<Copy>("gatherJars") {
 tasks.register("writeJPackageArgs") {
     dependsOn(tasks.jar)
     doLast {
+        file("icon.png").copyTo(file("build/release/icon.png"), true)
         val file = file("build/release/args")
         file.writeText("""
             -n "${project.name}"
@@ -61,6 +62,7 @@ tasks.register("writeJPackageArgs") {
             .stream().map { it.name }.collect(Collectors.joining(File.pathSeparator))}"
             -m "${application.mainModule.get()}/${application.mainClass.get()}"
             --app-version "${project.version}"
+            --icon "icon.png"
         """.trimIndent())
     }
 }
