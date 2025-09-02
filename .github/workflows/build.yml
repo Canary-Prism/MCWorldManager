@@ -6,6 +6,7 @@ on:
     types: [ published ]
 env:
   JAVA_VERSION: "22"
+  ICON_PATH: "icon.png"
 jobs:
   build_mac_arm64:
     name: "JPackage Build for Mac arm64"
@@ -23,6 +24,26 @@ jobs:
       - name: "Build Java"
         shell: "bash"
         run: "./gradlew release"
+      - name: "Process Icon"
+        if: "env.ICON_PATH != ''"
+        run: |
+          mkdir build/release/icon
+          cp $ICON_PATH build/release/icon/icon
+          cd build/release/icon
+          mkdir icon.iconset
+          sips -z 16 16     icon --out icon.iconset/icon_16x16.png
+          sips -z 32 32     icon --out icon.iconset/icon_16x16@2x.png
+          sips -z 32 32     icon --out icon.iconset/icon_32x32.png
+          sips -z 64 64     icon --out icon.iconset/icon_32x32@2x.png
+          sips -z 128 128   icon --out icon.iconset/icon_128x128.png
+          sips -z 256 256   icon --out icon.iconset/icon_128x128@2x.png
+          sips -z 256 256   icon --out icon.iconset/icon_256x256.png
+          sips -z 512 512   icon --out icon.iconset/icon_256x256@2x.png
+          sips -z 512 512   icon --out icon.iconset/icon_512x512.png
+          sips -z 1024 1024   icon --out icon.iconset/icon_512x512@2x.png
+          iconutil -c icns icon.iconset
+          cd ..
+          echo "--icon icon/icon.icns" >> args
       - name: "JPackage Mac"
         id: "jpackage"
         shell: "bash"
@@ -54,6 +75,26 @@ jobs:
       - name: "Build Java"
         shell: "bash"
         run: "./gradlew release"
+      - name: "Process Icon"
+        if: "env.ICON_PATH != ''"
+        run: |
+          mkdir build/release/icon
+          cp $ICON_PATH build/release/icon/icon
+          cd build/release/icon
+          mkdir icon.iconset
+          sips -z 16 16     icon --out icon.iconset/icon_16x16.png
+          sips -z 32 32     icon --out icon.iconset/icon_16x16@2x.png
+          sips -z 32 32     icon --out icon.iconset/icon_32x32.png
+          sips -z 64 64     icon --out icon.iconset/icon_32x32@2x.png
+          sips -z 128 128   icon --out icon.iconset/icon_128x128.png
+          sips -z 256 256   icon --out icon.iconset/icon_128x128@2x.png
+          sips -z 256 256   icon --out icon.iconset/icon_256x256.png
+          sips -z 512 512   icon --out icon.iconset/icon_256x256@2x.png
+          sips -z 512 512   icon --out icon.iconset/icon_512x512.png
+          sips -z 1024 1024   icon --out icon.iconset/icon_512x512@2x.png
+          iconutil -c icns icon.iconset
+          cd ..
+          echo "--icon icon/icon.icns" >> args
       - name: "JPackage Mac"
         id: "jpackage"
         shell: "bash"
@@ -85,6 +126,20 @@ jobs:
       - name: "Build Java"
         shell: "bash"
         run: "./gradlew release"
+      - name: "Install ImageMagick"
+        if: "env.ICON_PATH != ''"
+        run: |
+          choco install imagemagick -y
+      - name: "Process Icon"
+        if: "env.ICON_PATH != ''"
+        run: |
+          mkdir build/release/icon
+          ICON_NAME="$(basename "${ICON_PATH}")"
+          cp $ICON_PATH "build/release/icon/${ICON_NAME}"
+          cd build/release/icon
+          magick convert "${ICON_NAME}" -define icon:auto-resize=256,128,64,48,32,16 icon.ico
+          cd ..
+          echo "--icon icon/icon.ico" >> args
       - name: "JPackage Windows"
         id: "jpackage"
         shell: "bash"
@@ -125,6 +180,14 @@ jobs:
       - name: "Build Java"
         shell: "bash"
         run: "./gradlew release"
+      - name: "Process Icon"
+        if: "env.ICON_PATH != ''"
+        run: |
+          mkdir build/release/icon
+          ICON_NAME="$(basename "${ICON_PATH}")"
+          cp $ICON_PATH "build/release/icon/${ICON_NAME}"
+          cd build/release/
+          echo "--icon icon/${ICON_NAME}" >> args
       - name: "JPackage Windows"
         id: "jpackage"
         shell: "bash"

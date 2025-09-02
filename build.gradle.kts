@@ -1,3 +1,4 @@
+import java.util.jar.JarFile
 import java.util.stream.Collectors
 
 /*
@@ -43,28 +44,50 @@ dependencies {
     runtimeOnly(libs.vfs2nio)
 }
 
+fun isModular(file: File): Boolean {
+    return JarFile(file).getEntry("module-info.class") != null
+}
+
+val modular = application.mainModule.isPresent && configurations.runtimeClasspath.get()
+    .files
+    .stream()
+    .allMatch { isModular(it) }
 
 tasks.register<Copy>("gatherJars") {
     notCompatibleWithConfigurationCache("i don't really know")
-    dependsOn(tasks.jar)
-    into("build/release")
-    from(configurations.runtimeClasspath, tasks.jar.get().archiveFile.get())
+    val jars = configurations.runtimeClasspath.get().files + setOf(tasks.jar.get().archiveFile.get().asFile)
+    if (modular) {
+        from(jars.stream().filter { isModular(it) }.toList())
+        into("build/release")
+    } else {
+        from(jars.stream().filter { !isModular(it) }.toList())
+        into("build/release/input")
+    }
 }
 
 tasks.register("writeJPackageArgs") {
     notCompatibleWithConfigurationCache("i don't really know")
     dependsOn(tasks.jar)
     doLast {
-        file("icon.png").copyTo(file("build/release/icon.png"), true)
+        val jars = configurations.runtimeClasspath.get().files + setOf(tasks.jar.get().archiveFile.get().asFile)
         val file = file("build/release/args")
         file.writeText("""
             -n "${project.name}"
-            --description "${project.description}"
-            -p "${(configurations.runtimeClasspath.get().files + setOf(tasks.jar.get().archiveFile.get().asFile))
-            .stream().map { it.name }.collect(Collectors.joining(File.pathSeparator))}"
-            -m "${application.mainModule.get()}/${application.mainClass.get()}"
             --app-version "${project.version}"
-            --icon "icon.png"
+            --description "${project.description}"
+            ${if (modular) { 
+                """
+                    -p "${jars.stream().filter { isModular(it) }.map { it.name }
+                            .collect(Collectors.joining(File.pathSeparator))}"
+                    -m "${application.mainModule.get()}/${application.mainClass.get()}"
+                """.trimIndent()
+            } else {
+                """
+                    -i "${file("build/release/input").absolutePath}"
+                    --main-jar ${tasks.jar.get().archiveFile.get().asFile}
+                    --main-class ${application.mainClass.get()}
+                """.trimIndent()
+            }}
         """.trimIndent())
     }
 }
