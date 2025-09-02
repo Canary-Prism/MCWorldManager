@@ -55,6 +55,7 @@ val modular = application.mainModule.isPresent && configurations.runtimeClasspat
 
 tasks.register<Copy>("gatherJars") {
     notCompatibleWithConfigurationCache("i don't really know")
+    dependsOn(tasks.jar)
     val jars = configurations.runtimeClasspath.get().files + setOf(tasks.jar.get().archiveFile.get().asFile)
     if (modular) {
         from(jars.stream().filter { isModular(it) }.toList())
