@@ -17,7 +17,7 @@ I'm assuming you know how to use GitHub. If not then here:
 1. Click above link
 2. Find latest release
 3. Find "Assets" Section
-4. Click the "MCWorldManager-x.y.z.jar" file
+4. Click the "MCWorldManager-x.y.z.`<whatever extension ur OS uses>`" file
 
 ### Notice
 
@@ -30,6 +30,11 @@ This program uses Java 22 bc i'm weird like that
 
 
 ## Historical Changelog
+
+### 3.0.0
+- rewrote a lot a lot of stuff
+- you can now have multiple instances open at once in the tabbed pane
+- instance finder works differently idk
 
 ### 2.5.0
 - added support for EndTag
