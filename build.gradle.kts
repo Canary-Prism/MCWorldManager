@@ -45,12 +45,14 @@ dependencies {
 
 
 tasks.register<Copy>("gatherJars") {
+    notCompatibleWithConfigurationCache("i don't really know")
     dependsOn(tasks.jar)
     into("build/release")
     from(configurations.runtimeClasspath, tasks.jar.get().archiveFile.get())
 }
 
 tasks.register("writeJPackageArgs") {
+    notCompatibleWithConfigurationCache("i don't really know")
     dependsOn(tasks.jar)
     doLast {
         file("icon.png").copyTo(file("build/release/icon.png"), true)
@@ -68,6 +70,7 @@ tasks.register("writeJPackageArgs") {
 }
 
 tasks.register("writeInfo") {
+    notCompatibleWithConfigurationCache("i don't really know")
     doLast {
         val file = file("build/release/info.env")
         file.writeText("""
@@ -78,6 +81,7 @@ tasks.register("writeInfo") {
 }
 
 tasks.register("release") {
+    notCompatibleWithConfigurationCache("i don't really know")
     dependsOn(tasks["gatherJars"], tasks["writeJPackageArgs"], tasks["writeInfo"])
 }
 
