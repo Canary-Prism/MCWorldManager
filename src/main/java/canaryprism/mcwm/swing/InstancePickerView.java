@@ -121,7 +121,9 @@ public class InstancePickerView extends JComponent {
                         throw new RuntimeException(ex);
                     }
                 });
-        launcher_list.setListData(finder_list.toArray(InstanceFinder[]::new));
+        launcher_list.setListData(finder_list.stream()
+                .filter((e) -> !e.getSavesPaths().isEmpty())
+                .toArray(InstanceFinder[]::new));
     }
     
     private void addSaveDirectory(SaveDirectory directory) {
