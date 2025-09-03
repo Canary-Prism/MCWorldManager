@@ -6,7 +6,6 @@ import canaryprism.mcwm.swing.SaveView;
 import canaryprism.mcwm.swing.file.LoadedFile;
 import canaryprism.mcwm.swing.file.WorldFile;
 import canaryprism.mcwm.swing.nbt.NBTView;
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import dev.dirs.ProjectDirectories;
 import org.apache.commons.io.file.PathUtils;
 import org.jetbrains.annotations.NotNull;
@@ -15,8 +14,12 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
+import javax.swing.plaf.metal.MetalLookAndFeel;
 import java.awt.*;
-import java.awt.datatransfer.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -60,7 +63,7 @@ public class Main {
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
         
         final var icon = ImageIO.read(Objects.requireNonNull(Main.class.getResource("/mcwm/icon.png")));
-        if (Taskbar.isTaskbarSupported())
+        if (Taskbar.isTaskbarSupported() && Taskbar.getTaskbar().isSupported(Taskbar.Feature.ICON_IMAGE))
             Taskbar.getTaskbar().setIconImage(icon);
 
         var working_directory = Path.of(DIRS.cacheDir);
@@ -74,7 +77,7 @@ public class Main {
                     return UIManager.getSystemLookAndFeelClassName();
                 }
                 return e;
-            }, FlatMacDarkLaf.class::getName);
+            }, MetalLookAndFeel.class::getName);
         
             try {
                 UIManager.setLookAndFeel(laf);
