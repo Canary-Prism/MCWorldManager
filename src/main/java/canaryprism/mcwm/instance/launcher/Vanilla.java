@@ -21,6 +21,8 @@ import java.util.Optional;
  * this makes my job pretty easy
  */
 public final class Vanilla implements InstanceFinder {
+    
+    private static final String INSTANCE_NAME = "Vanilla";
 
     private static final Optional<Image> icon;
     static {
@@ -42,7 +44,7 @@ public final class Vanilla implements InstanceFinder {
         try {
             var path = Path.of(appdata, ".minecraft", "saves");
             if (Files.exists(path))
-                saves_path.add(new SaveDirectory(icon, getLauncherName(), path));
+                saves_path.add(new SaveDirectory(icon, INSTANCE_NAME, path));
         } catch (Exception e) {
         }
     }
@@ -53,7 +55,7 @@ public final class Vanilla implements InstanceFinder {
         try {
             var path = Path.of(home, "Library", "Application Support", "minecraft", "saves");
             if (Files.exists(path))
-                saves_path.add(new SaveDirectory(icon, getLauncherName(), path));
+                saves_path.add(new SaveDirectory(icon, INSTANCE_NAME, path));
         } catch (Exception e) {
         }   
     }
@@ -64,7 +66,7 @@ public final class Vanilla implements InstanceFinder {
         try {
             var path = Path.of(home, ".minecraft", "saves");
             if (Files.exists(path))
-                saves_path.add(new SaveDirectory(icon, getLauncherName(), path));
+                saves_path.add(new SaveDirectory(icon, INSTANCE_NAME, path));
         } catch (Exception e) {
         }
     }
