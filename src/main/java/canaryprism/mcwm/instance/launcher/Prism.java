@@ -303,7 +303,8 @@ public final class Prism implements InstanceFinder {
     
     @Override
     public void writeCache(Path path) throws IOException {
-        Files.writeString(path, cache_path.toString());
+        if (cache_path != null)
+            Files.writeString(path, cache_path.toString());
     }
     
     @Override
