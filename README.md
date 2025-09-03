@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 3.0.5
+- fixed crash for environments where a Taskbar is supported but setting the icon image isn't
+
 ### 3.0.4
 - not much, just fixing a bunch of warnings
 
