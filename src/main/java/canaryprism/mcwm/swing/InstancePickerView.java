@@ -3,8 +3,8 @@ package canaryprism.mcwm.swing;
 import canaryprism.mcwm.Main;
 import canaryprism.mcwm.instance.InstanceFinder;
 import canaryprism.mcwm.instance.SaveDirectory;
-import canaryprism.mcwm.swing.savedir.SaveDirectoryView;
-import canaryprism.mcwm.swing.savedir.SaveFinderView;
+import canaryprism.mcwm.swing.instance.SaveDirectoryView;
+import canaryprism.mcwm.swing.instance.SaveFinderView;
 
 import javax.swing.*;
 import javax.swing.border.LineBorder;

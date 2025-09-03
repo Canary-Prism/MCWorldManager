@@ -1,14 +1,13 @@
-package canaryprism.mcwm.swing.savedir;
+package canaryprism.mcwm.swing.instance;
 
 import java.awt.Image;
-
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 
-import canaryprism.mcwm.instance.SaveDirectory;
+import canaryprism.mcwm.instance.InstanceFinder;
 import canaryprism.mcwm.swing.file.UnknownFile;
 
-public class SaveDirectoryView extends JComponent {
+public class SaveFinderView extends JComponent {
 
     private static final Image default_icon;
     static {
@@ -20,14 +19,14 @@ public class SaveDirectoryView extends JComponent {
     }
     
     
-    private final SaveDirectory instance;
+    private final InstanceFinder finder;
 
-    public SaveDirectoryView(SaveDirectory instance) {
-        this.instance = instance;
+    public SaveFinderView(InstanceFinder finder) {
+        this.finder = finder;
     }
 
-    public SaveDirectory getInstance() {
-        return instance;
+    public InstanceFinder getFinder() {
+        return finder;
     }
 
     public void setFile(UnknownFile file) {
@@ -41,7 +40,7 @@ public class SaveDirectoryView extends JComponent {
 
         var g = (java.awt.Graphics2D) g1;
 
-        var icon = instance.icon().orElse(default_icon);
+        var icon = finder.getIcon().orElse(default_icon);
 
         float height = getHeight();
 
@@ -58,6 +57,6 @@ public class SaveDirectoryView extends JComponent {
 
         y += y_step / 15;
 
-        g.drawString(instance.name(), x, y += y_step);
+        g.drawString(finder.getLauncherName(), x, y += y_step);
     }
 }
