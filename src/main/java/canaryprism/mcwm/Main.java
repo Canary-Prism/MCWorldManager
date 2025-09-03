@@ -6,6 +6,7 @@ import canaryprism.mcwm.swing.SaveView;
 import canaryprism.mcwm.swing.file.LoadedFile;
 import canaryprism.mcwm.swing.file.WorldFile;
 import canaryprism.mcwm.swing.nbt.NBTView;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import dev.dirs.ProjectDirectories;
 import org.apache.commons.io.file.PathUtils;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +15,6 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.plaf.metal.MetalLookAndFeel;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -77,7 +77,7 @@ public class Main {
                     return UIManager.getSystemLookAndFeelClassName();
                 }
                 return e;
-            }, MetalLookAndFeel.class::getName);
+            }, FlatMacDarkLaf.class::getName);
         
             try {
                 UIManager.setLookAndFeel(laf);
