@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.SequencedCollection;
@@ -105,7 +106,9 @@ public class InstancePickerView extends JComponent {
                     if (!use_cache)
                         return true;
                     try {
-                        e.loadCache(cache_path.resolve(e.getClass().getName()));
+                        var cache = cache_path.resolve(e.getClass().getName());
+                        if (Files.exists(cache))
+                            e.loadCache(cache);
                     } catch (IOException _) {}
                     return e.getSavesPaths().isEmpty();
                 })
