@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 3.0.7
+- fixed instance finders giving all launchers even if they couldn't actualy find any instances
+
 ### 3.0.6
 - fixed cache breaking everything
 - fixed mistake of last version not imposing the mac laf on everyone teehee
