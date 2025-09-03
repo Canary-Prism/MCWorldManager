@@ -8,6 +8,7 @@ import canaryprism.mcwm.swing.file.UnknownFile;
 import canaryprism.mcwm.swing.file.WorldFile;
 import canaryprism.mcwm.swing.nbt.NBTView;
 import org.apache.commons.io.file.PathUtils;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -17,6 +18,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.dnd.DnDConstants;
 import java.awt.dnd.DropTarget;
 import java.awt.dnd.DropTargetDropEvent;
+import java.awt.event.ActionEvent;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -32,10 +34,14 @@ import static java.nio.file.StandardWatchEventKinds.*;
 
 public class SaveView extends JComponent implements Closeable {
     
+    public static final int WORLD_ENTRY_WIDTH = 500, WORLD_ENTRY_HEIGHT = 50;
+    public static final int BUTTON_SPACING_WIDTH = 50;
+    public static final int WORLD_LIST_MIN_HEIGHT = 80;
+    
     private final Main main;
     private final Path save_path;
     private final JList<LoadedFile> list;
-    private final List<LoadedFile> worlds = new ArrayList<>();
+    private final SequencedCollection<LoadedFile> worlds = new ArrayList<>();
     
     private WatchService watch_service;
     
@@ -87,7 +93,7 @@ public class SaveView extends JComponent implements Closeable {
         
         list.setCellRenderer((_, value, _, selected, _) -> {
             var entry = WorldListEntry.of(value);
-            entry.setPreferredSize(new Dimension(500, 50));
+            entry.setPreferredSize(new Dimension(WORLD_ENTRY_WIDTH, WORLD_ENTRY_HEIGHT));
             var panel = new JPanel(new BorderLayout());
             panel.add(entry, BorderLayout.CENTER);
             if (selected) {
@@ -112,7 +118,7 @@ public class SaveView extends JComponent implements Closeable {
         });
         
         world_list_pane.setViewportView(list);
-        world_list_pane.setMinimumSize(new Dimension(500, 80));
+        world_list_pane.setMinimumSize(new Dimension(WORLD_ENTRY_WIDTH, WORLD_LIST_MIN_HEIGHT));
         
         world_list_pane.setDropTarget(new DropTarget() {
             @SuppressWarnings("unchecked")
@@ -138,7 +144,7 @@ public class SaveView extends JComponent implements Closeable {
                         importWorlds(list);
                     });
                     evt.dropComplete(true);
-                } catch (Exception ex) {
+                } catch (Exception _) {
                 }
             }
         });
@@ -152,10 +158,6 @@ public class SaveView extends JComponent implements Closeable {
         option_buttons_panel = new JPanel(card);
         option_buttons_panel.setBorder(new EmptyBorder(10, 10, 10, 10));
         
-        // world_options_panel = new JPanel();
-        // archive_options_panel = new JPanel();
-        // unknown_options_panel = new JPanel();
-        
         initialiseOptions();
         
         updateOptionsPanel();
@@ -166,9 +168,7 @@ public class SaveView extends JComponent implements Closeable {
         action_panel.setLayout(new BoxLayout(action_panel, BoxLayout.X_AXIS));
         
         var import_button = new JButton("Import World");
-        import_button.addActionListener((e) -> {
-            importButton();
-        });
+        import_button.addActionListener((_) -> importButton());
         import_button.setToolTipText("Import a Minecraft world");
         
         var open_button = new JButton("Open Folder");
@@ -182,9 +182,7 @@ public class SaveView extends JComponent implements Closeable {
         
         
         var refresh_button = new JButton("Refresh");
-        refresh_button.addActionListener((_) -> {
-            reloadAllWorlds();
-        });
+        refresh_button.addActionListener((_) -> reloadAllWorlds());
         refresh_button.setToolTipText("Refresh the list of worlds");
         
         auto_refresh_checkbox.setToolTipText("Automatically refresh the list of worlds when a change is detected in the folder");
@@ -203,184 +201,28 @@ public class SaveView extends JComponent implements Closeable {
     private void initialiseOptions() {
         //#region init World Options
         {
-            var export_button = new JButton("Share");
-            export_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                if (selected instanceof WorldFile world) {
-                    main.export(world);
-                }
-            });
-            export_button.setToolTipText("Export the world to a zip file to share it with others");
-            
-            var copy_button = new JButton("Copy");
-            copy_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                main.copy(selected);
-            });
-            copy_button.setToolTipText("Copy the world folder to clipboard");
-            
-            var delete_button = new JButton("Delete");
-            delete_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                main.delete(selected);
-            });
-            delete_button.setToolTipText("Delete the world forever");
-            
-            var edit_nbt_button = new JButton("Edit NBT Data");
-            edit_nbt_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                if (selected instanceof WorldFile world) {
-                    Thread.ofVirtual().start(() -> {
-                        try {
-                            new NBTView(world.path().resolve("level.dat").toFile(), SaveView.this);
-                        } catch (IOException e1) {
-                            JOptionPane.showMessageDialog(this
-                                    , "Failed to open NBT Editor: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                        }
-                    });
-                }
-            });
-            edit_nbt_button.setToolTipText("Advanced: Edit the NBT data of the world");
-            
-            var panel = new JPanel();
-            
-            panel.add(export_button);
-            panel.add(copy_button);
-            panel.add(delete_button);
-            
-            panel.add(Box.createHorizontalStrut(50));
-            panel.add(edit_nbt_button);
+            var panel = createWorldOptionsPanel();
             
             option_buttons_panel.add(panel, SelectedType.WORLD.name());
         }
         //#endregion
         //#region init Archive Options
         {
-            var expand_button = new JButton("Expand");
-            expand_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                if (selected instanceof WorldFile world) {
-                    expand(world);
-                }
-            });
-            expand_button.setToolTipText("Expand the archive so Minecraft can load it");
-            
-            var copy_button = new JButton("Copy");
-            copy_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                main.copy(selected);
-            });
-            copy_button.setToolTipText("Copy the archive to clipboard");
-            
-            var delete_button = new JButton("Delete");
-            delete_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                main.delete(selected);
-            });
-            delete_button.setToolTipText("Delete the world forever");
-            
-            var panel = new JPanel();
-            
-            panel.add(expand_button);
-            panel.add(copy_button);
-            panel.add(delete_button);
+            var panel = createArchiveOptionsPanel();
             
             option_buttons_panel.add(panel, SelectedType.ARCHIVE.name());
         }
         //#endregion
         //#region init Unknown Options
         {
-            var delete_button = new JButton("Delete");
-            delete_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                main.delete(selected);
-            });
-            delete_button.setToolTipText("Delete the file forever");
-            
-            var error_button = new JButton("Error Details");
-            error_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                if (selected instanceof UnknownFile unknown) {
-                    Thread.ofVirtual().start(() -> {
-                        var message = getStackTraceAsString(unknown.exception());
-                        JOptionPane.showMessageDialog(this
-                                , message, "Error Details", JOptionPane.ERROR_MESSAGE);
-                    });
-                }
-            });
-            error_button.setToolTipText("View the error details");
-            
-            var copy_button = new JButton("Copy");
-            copy_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                main.copy(selected);
-            });
-            copy_button.setToolTipText("Copy the file to clipboard");
-            
-            
-            var panel = new JPanel();
-            
-            panel.add(delete_button);
-            panel.add(error_button);
-            panel.add(copy_button);
+            var panel = createUnknownOptionsPanel();
             
             option_buttons_panel.add(panel, SelectedType.UNKNOWN.name());
         }
         //#endregion
         //#region init Unknown with Level Options
         {
-            var delete_button = new JButton("Delete");
-            delete_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                main.delete(selected);
-            });
-            delete_button.setToolTipText("Delete the file forever");
-            
-            var error_button = new JButton("Error Details");
-            error_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                if (selected instanceof UnknownFile unknown) {
-                    Thread.ofVirtual().start(() -> {
-                        var message = getStackTraceAsString(unknown.exception());
-                        JOptionPane.showMessageDialog(this
-                                , message, "Error Details", JOptionPane.ERROR_MESSAGE);
-                    });
-                }
-            });
-            error_button.setToolTipText("View the error details");
-            
-            var copy_button = new JButton("Copy");
-            copy_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                main.copy(selected);
-            });
-            copy_button.setToolTipText("Copy the file to clipboard");
-            
-            var edit_nbt_button = new JButton("Edit NBT Data");
-            edit_nbt_button.addActionListener((e) -> {
-                var selected = list.getSelectedValue();
-                if (selected instanceof UnknownFile file) {
-                    Thread.ofVirtual().start(() -> {
-                        try {
-                            new NBTView(file.path().resolve("level.dat").toFile(), SaveView.this);
-                        } catch (IOException e1) {
-                            JOptionPane.showMessageDialog(this
-                                    , "Failed to open NBT Editor: " + e1.getMessage(),
-                                    "Error", JOptionPane.ERROR_MESSAGE);
-                        }
-                    });
-                }
-            });
-            edit_nbt_button.setToolTipText("Advanced: Edit the NBT data of the found level.dat file");
-            
-            var panel = new JPanel();
-            
-            panel.add(delete_button);
-            panel.add(error_button);
-            panel.add(copy_button);
-            
-            panel.add(Box.createHorizontalStrut(50));
-            panel.add(edit_nbt_button);
+            var panel = createUnknownWithLevelOptionsPanel();
             
             option_buttons_panel.add(panel, SelectedType.UNKNOWN_WITH_LEVEL.name());
         }
@@ -393,10 +235,186 @@ public class SaveView extends JComponent implements Closeable {
         }
     }
     
+    private JPanel createWorldOptionsPanel() {
+        var panel = new JPanel();
+        
+        var export_button = new JButton("Share");
+        export_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            if (selected instanceof WorldFile world) {
+                main.export(world);
+            }
+        });
+        export_button.setToolTipText("Export the world to a zip file to share it with others");
+        
+        var copy_button = new JButton("Copy");
+        copy_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            main.copy(selected);
+        });
+        copy_button.setToolTipText("Copy the world folder to clipboard");
+        
+        var delete_button = new JButton("Delete");
+        delete_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            main.delete(selected);
+        });
+        delete_button.setToolTipText("Delete the world forever");
+        
+        var edit_nbt_button = createEditNbtButton();
+        
+        panel.add(export_button);
+        panel.add(copy_button);
+        panel.add(delete_button);
+        
+        panel.add(Box.createHorizontalStrut(BUTTON_SPACING_WIDTH));
+        panel.add(edit_nbt_button);
+        return panel;
+    }
+    
+    private JButton createEditNbtButton() {
+        var edit_nbt_button = new JButton("Edit NBT Data");
+        edit_nbt_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            if (selected instanceof WorldFile world) {
+                Thread.ofVirtual().start(() -> {
+                    try {
+                        new NBTView(world.path().resolve("level.dat").toFile(), SaveView.this);
+                    } catch (IOException e1) {
+                        JOptionPane.showMessageDialog(this
+                                , "Failed to open NBT Editor: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            }
+        });
+        edit_nbt_button.setToolTipText("Advanced: Edit the NBT data of the world");
+        return edit_nbt_button;
+    }
+    
+    private JPanel createArchiveOptionsPanel() {
+        var expand_button = new JButton("Expand");
+        expand_button.addActionListener(this::actionPerformed);
+        expand_button.setToolTipText("Expand the archive so Minecraft can load it");
+        
+        var copy_button = new JButton("Copy");
+        copy_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            main.copy(selected);
+        });
+        copy_button.setToolTipText("Copy the archive to clipboard");
+        
+        var delete_button = new JButton("Delete");
+        delete_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            main.delete(selected);
+        });
+        delete_button.setToolTipText("Delete the world forever");
+        
+        var panel = new JPanel();
+        
+        panel.add(expand_button);
+        panel.add(copy_button);
+        panel.add(delete_button);
+        return panel;
+    }
+    
+    private JPanel createUnknownOptionsPanel() {
+        var delete_button = new JButton("Delete");
+        delete_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            main.delete(selected);
+        });
+        delete_button.setToolTipText("Delete the file forever");
+        
+        var error_button = createErrorDetailsButton();
+        
+        var copy_button = new JButton("Copy");
+        copy_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            main.copy(selected);
+        });
+        copy_button.setToolTipText("Copy the file to clipboard");
+        
+        
+        var panel = new JPanel();
+        
+        panel.add(delete_button);
+        panel.add(error_button);
+        panel.add(copy_button);
+        return panel;
+    }
+    
+    private @NotNull JButton createErrorDetailsButton() {
+        var error_button = new JButton("Error Details");
+        error_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            if (selected instanceof UnknownFile unknown) {
+                Thread.ofVirtual().start(() -> {
+                    var message = getStackTraceAsString(unknown.exception());
+                    JOptionPane.showMessageDialog(this
+                            , message, "Error Details", JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        });
+        error_button.setToolTipText("View the error details");
+        return error_button;
+    }
+    
+    private JPanel createUnknownWithLevelOptionsPanel() {
+        var panel = new JPanel();
+        
+        var delete_button = new JButton("Delete");
+        delete_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            main.delete(selected);
+        });
+        delete_button.setToolTipText("Delete the file forever");
+        
+        var error_button = createErrorDetailsButton();
+        
+        var copy_button = new JButton("Copy");
+        copy_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            main.copy(selected);
+        });
+        copy_button.setToolTipText("Copy the file to clipboard");
+        
+        var edit_nbt_button = new JButton("Edit NBT Data");
+        edit_nbt_button.addActionListener((_) -> {
+            var selected = list.getSelectedValue();
+            if (selected instanceof UnknownFile file) {
+                Thread.ofVirtual().start(() -> {
+                    try {
+                        new NBTView(file.path().resolve("level.dat").toFile(), SaveView.this);
+                    } catch (IOException e1) {
+                        JOptionPane.showMessageDialog(this
+                                , "Failed to open NBT Editor: " + e1.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                });
+            }
+        });
+        edit_nbt_button.setToolTipText("Advanced: Edit the NBT data of the found level.dat file");
+        
+        panel.add(delete_button);
+        panel.add(error_button);
+        panel.add(copy_button);
+        
+        panel.add(Box.createHorizontalStrut(BUTTON_SPACING_WIDTH));
+        panel.add(edit_nbt_button);
+        return panel;
+    }
+    
     private final JPanel option_buttons_panel;
     private final CardLayout card;
     
-
+    private void actionPerformed(ActionEvent e) {
+        var selected = list.getSelectedValue();
+        if (selected instanceof WorldFile world) {
+            expand(world);
+        }
+    }
+    
     
     enum SelectedType {
         NONE, WORLD, ARCHIVE, UNKNOWN, UNKNOWN_WITH_LEVEL;
@@ -417,9 +435,7 @@ public class SaveView extends JComponent implements Closeable {
                     card.show(option_buttons_panel, SelectedType.UNKNOWN.name());
                 }
             }
-            case null -> {
-                card.show(option_buttons_panel, SelectedType.NONE.name());
-            }
+            case null -> card.show(option_buttons_panel, SelectedType.NONE.name());
         }
     }
     
@@ -452,23 +468,21 @@ public class SaveView extends JComponent implements Closeable {
                     
                     CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
                     
-                    SwingUtilities.invokeLater(() -> {
-                        list.setListData(worlds.stream().sorted((a, b) -> {
-                            if (a instanceof WorldFile world_a && b instanceof WorldFile world_b) {
-                                return -world_a.data().lastPlayed().compareTo(world_b.data().lastPlayed());
-                            } else if (a instanceof WorldFile) {
-                                return -1;
-                            } else if (b instanceof WorldFile) {
-                                return 1;
-                            } else {
-                                try {
-                                    return Files.getLastModifiedTime(b.path()).compareTo(Files.getLastModifiedTime(a.path()));
-                                } catch (IOException e) {
-                                    return 0; // eh, whatever
-                                }
+                    SwingUtilities.invokeLater(() -> list.setListData(worlds.stream().sorted((a, b) -> {
+                        if (a instanceof WorldFile world_a && b instanceof WorldFile world_b) {
+                            return -world_a.data().lastPlayed().compareTo(world_b.data().lastPlayed());
+                        } else if (a instanceof WorldFile) {
+                            return -1;
+                        } else if (b instanceof WorldFile) {
+                            return 1;
+                        } else {
+                            try {
+                                return Files.getLastModifiedTime(b.path()).compareTo(Files.getLastModifiedTime(a.path()));
+                            } catch (IOException e) {
+                                return 0; // eh, whatever
                             }
-                        }).toArray(LoadedFile[]::new));
-                    });
+                        }
+                    }).toArray(LoadedFile[]::new)));
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -557,7 +571,7 @@ public class SaveView extends JComponent implements Closeable {
             var display_panel = new JPanel(new BorderLayout());
             display_panel.setBorder(new EmptyBorder(2, 2 ,2, 2));
             var world_entry = WorldListEntry.of(world);
-            world_entry.setPreferredSize(new Dimension(500, 50));
+            world_entry.setPreferredSize(new Dimension(WORLD_ENTRY_WIDTH, WORLD_ENTRY_HEIGHT));
             display_panel.add(world_entry, BorderLayout.CENTER);
             
             panel.add(display_panel);
@@ -566,9 +580,6 @@ public class SaveView extends JComponent implements Closeable {
         var confirm = JOptionPane.showConfirmDialog(this
                 , panel,
                 "Import World", JOptionPane.YES_NO_OPTION);
-        
-        // deallocate the panel for good measure
-        panel = null;
         
         if (confirm != JOptionPane.YES_OPTION) {
             return;
@@ -603,7 +614,7 @@ public class SaveView extends JComponent implements Closeable {
                 
                 display_panel.setBorder(new EmptyBorder(2, 2, 2, 2));
                 var world_entry = WorldListEntry.of(world);
-                world_entry.setPreferredSize(new Dimension(500, 50));
+                world_entry.setPreferredSize(new Dimension(WORLD_ENTRY_WIDTH, WORLD_ENTRY_HEIGHT));
                 display_panel.add(world_entry, BorderLayout.CENTER);
                 
                 panel.add(display_panel);
@@ -618,8 +629,6 @@ public class SaveView extends JComponent implements Closeable {
                     }
                     output = save_path.resolve(new_name);
                 }
-                
-                panel = null;
             }
             outputs.put(world, output);
         }
@@ -643,7 +652,6 @@ public class SaveView extends JComponent implements Closeable {
                         JOptionPane.showMessageDialog(this
                                 , "Failed to import world: " + name + " - " + e.getMessage(),
                                 "Error", JOptionPane.ERROR_MESSAGE);
-                        return;
                     }
                 } else {
                     

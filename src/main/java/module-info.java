@@ -2,6 +2,8 @@ import canaryprism.mcwm.instance.InstanceFinder;
 import canaryprism.mcwm.instance.launcher.*;
 
 module canaryprism.mcwm {
+    requires static org.jetbrains.annotations;
+    
     requires canaryprism.querz.nbt;
     requires com.formdev.flatlaf;
     requires dev.dirs;
@@ -12,6 +14,8 @@ module canaryprism.mcwm {
     requires org.apache.commons.text;
     requires org.json;
     requires org.apache.commons.configuration2;
+    
+    exports canaryprism.mcwm.swing.formatting;
     
     uses InstanceFinder;
     

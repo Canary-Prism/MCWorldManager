@@ -28,12 +28,13 @@
     <inspection_tool class="LocalVariableNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_ignoreForLoopParameters" value="false" />
       <option name="m_ignoreCatchParameters" value="false" />
-      <option name="m_regex" value="[a-z][A-Za-z_\d]*" />
+      <option name="m_regex" value="(_|[a-z][A-Za-z_\d]*)" />
       <option name="m_minLength" value="1" />
       <option name="m_maxLength" value="100" />
     </inspection_tool>
     <inspection_tool class="MagicNumber" enabled="true" level="WEAK WARNING" enabled_by_default="true" editorAttributes="INFO_ATTRIBUTES" />
     <inspection_tool class="MissingDeprecatedAnnotation" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="OptionalUsedAsFieldOrParameterType" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="OverlyStrongTypeCast" enabled="true" level="WARNING" enabled_by_default="true" editorAttributes="WARNING_ATTRIBUTES">
       <option name="ignoreInMatchingInstanceof" value="false" />
     </inspection_tool>
@@ -52,6 +53,7 @@
       <option name="doNotWeakenToJavaLangObject" value="true" />
       <option name="onlyWeakentoInterface" value="true" />
       <option name="doNotWeakenInferredVariableType" value="true" />
+      <stopClasses>java.util.Set,java.util.SequencedCollection</stopClasses>
     </inspection_tool>
     <inspection_tool class="UnnecessarySemicolon" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoreAfterEnumConstants" value="true" />

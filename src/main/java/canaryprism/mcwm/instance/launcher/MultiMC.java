@@ -4,6 +4,7 @@ import canaryprism.mcwm.instance.InstanceFinder;
 import canaryprism.mcwm.instance.SaveDirectory;
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -35,6 +36,7 @@ public final class MultiMC implements InstanceFinder {
     static {
         Optional<Image> temp_icon;
         try (var is = MultiMC.class.getResourceAsStream("/mcwm/launcher/multimc/icon.png")) {
+            assert is != null;
             temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
@@ -47,6 +49,7 @@ public final class MultiMC implements InstanceFinder {
     static {
         Optional<Image> temp_icon;
         try (var is = MultiMC.class.getResourceAsStream("/mcwm/launcher/multimc/default_instance_icon.png")) {
+            assert is != null;
             temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
@@ -86,7 +89,7 @@ public final class MultiMC implements InstanceFinder {
                         int depth = 0;
 
                         @Override
-                        public FileVisitResult preVisitDirectory(Path dir, java.nio.file.attribute.BasicFileAttributes attrs) {
+                        public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir, java.nio.file.attribute.@NotNull BasicFileAttributes attrs) {
                             if (Files.isDirectory(dir) 
                                 && Files.isRegularFile(dir.resolve("MultiMC.exe"))
                                 && Files.isDirectory(dir.resolve("instances"))) {
@@ -107,7 +110,7 @@ public final class MultiMC implements InstanceFinder {
                         }
         
                         @Override
-                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                        public @NotNull FileVisitResult postVisitDirectory(@NotNull Path dir, IOException exc) {
                             depth--;
                             return java.nio.file.FileVisitResult.CONTINUE;
                         }
@@ -181,7 +184,7 @@ public final class MultiMC implements InstanceFinder {
                         int depth = 0;
 
                         @Override
-                        public FileVisitResult preVisitDirectory(Path dir, java.nio.file.attribute.BasicFileAttributes attrs) {
+                        public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir, java.nio.file.attribute.@NotNull BasicFileAttributes attrs) {
                             if (Files.isDirectory(dir) 
                                 && Files.isRegularFile(dir.resolve("MultiMC"))
                                 && Files.isDirectory(dir.resolve("instances"))) {
@@ -202,7 +205,7 @@ public final class MultiMC implements InstanceFinder {
                         }
         
                         @Override
-                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                        public @NotNull FileVisitResult postVisitDirectory(@NotNull Path dir, IOException exc) {
                             depth--;
                             return java.nio.file.FileVisitResult.CONTINUE;
                         }
@@ -238,8 +241,8 @@ public final class MultiMC implements InstanceFinder {
 
     private void load(Path instances) {
         saves_path.clear();
-        try {
-            Files.list(instances)
+        try (var stream = Files.list(instances)) {
+            stream
                 .filter(Files::isDirectory)
                 .filter((e) -> Files.isDirectory(e.resolve(".minecraft", "saves")))
                 .map((e) -> {
@@ -254,7 +257,7 @@ public final class MultiMC implements InstanceFinder {
                         var ini = new INIConfiguration();
                         ini.read(Files.newBufferedReader(e.resolve("instance.cfg"))); // i'm not sure using File instead of NIO is a good idea
                         
-                        name = (String) ini.getSection("_NO_SECTION").getString("name", e.getFileName().toString());
+                        name = ini.getSection("_NO_SECTION").getString("name", e.getFileName().toString());
                         // name = (String) ini.getSection("General").getOrDefault("name", e.getFileName().toString());
                     } catch (IOException | ClassCastException | NullPointerException | ConfigurationException ex) {
                         name = e.getFileName().toString();

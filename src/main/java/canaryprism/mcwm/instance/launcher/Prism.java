@@ -4,6 +4,7 @@ import canaryprism.mcwm.instance.SaveDirectory;
 import canaryprism.mcwm.instance.InstanceFinder;
 import org.apache.commons.configuration2.INIConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -100,8 +101,8 @@ public final class Prism implements InstanceFinder {
                             int depth = 0;
     
                             @Override
-                            public FileVisitResult preVisitDirectory(Path dir,
-                                    java.nio.file.attribute.BasicFileAttributes attrs) {
+                            public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir,
+                                                                              java.nio.file.attribute.@NotNull BasicFileAttributes attrs) {
                                 if (Files.isDirectory(dir)
                                         && Files.isRegularFile(dir.resolve("prismlauncher.exe"))
                                         && Files.isDirectory(dir.resolve("instances"))) { // i'm assuming it looks like this, i haven't actually seen it yet
@@ -122,7 +123,7 @@ public final class Prism implements InstanceFinder {
                             }
     
                             @Override
-                            public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                            public @NotNull FileVisitResult postVisitDirectory(@NotNull Path dir, IOException exc) {
                                 depth--;
                                 return java.nio.file.FileVisitResult.CONTINUE;
                             }
@@ -206,8 +207,8 @@ public final class Prism implements InstanceFinder {
                             int depth = 0;
 
                             @Override
-                            public FileVisitResult preVisitDirectory(Path dir,
-                                    java.nio.file.attribute.BasicFileAttributes attrs) {
+                            public @NotNull FileVisitResult preVisitDirectory(@NotNull Path dir,
+                                                                              java.nio.file.attribute.@NotNull BasicFileAttributes attrs) {
                                 if (Files.isDirectory(dir)
                                         && Files.isRegularFile(dir.resolve("PrismLauncher"))
                                         && Files.isDirectory(dir.resolve("instances"))) { // i'm assuming it looks like this, i haven't actually seen it yet
@@ -228,7 +229,7 @@ public final class Prism implements InstanceFinder {
                             }
 
                             @Override
-                            public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
+                            public @NotNull FileVisitResult postVisitDirectory(@NotNull Path dir, IOException exc) {
                                 depth--;
                                 return java.nio.file.FileVisitResult.CONTINUE;
                             }

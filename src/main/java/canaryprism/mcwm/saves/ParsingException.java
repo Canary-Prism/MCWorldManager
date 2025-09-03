@@ -14,6 +14,7 @@ public class ParsingException extends Exception {
         super(message, cause);
         this.verdict = verdict;
     }
+    @SuppressWarnings("unused")
     public ParsingException(Throwable cause, String verdict) {
         super(cause);
         this.verdict = verdict;

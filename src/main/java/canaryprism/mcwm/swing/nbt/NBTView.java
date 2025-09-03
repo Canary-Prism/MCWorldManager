@@ -5,6 +5,7 @@ import net.querz.nbt.io.NBTUtil;
 import net.querz.nbt.io.NamedTag;
 import net.querz.nbt.tag.*;
 import org.apache.commons.text.StringEscapeUtils;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -18,6 +19,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -113,227 +115,25 @@ public class NBTView {
 
         //#region Option panel nonsense
         {
-            var add_in_button = new JButton("New Tag In...");
-            add_in_button.addActionListener((e) -> {
-                if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
-                    throw new IllegalStateException("No node selected");
-
-                var o = node.getUserObject();
-
-                if (o instanceof NamedTag named_tag) {
-                    o = named_tag.getTag();
-                }
-
-                var tag = o;
-                var selected = tree.getSelectionPaths();
-                
-                Thread.ofVirtual().start(() -> {
-                    try {
-                        var new_tag = newTagOf(getTag(tag));
-                        if (new_tag == null) {
-                            return;
-                        }
-                        for (var path : selected) {
-                            var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
-
-                            // change the list tag to the correct type if it was of type EndTag
-                            {
-                                var user_object = parent.getUserObject();
-                                var named = false;
-                                if (user_object instanceof NamedTag named_tag) {
-                                    user_object = named_tag.getTag();
-                                    named = true;
-                                }
-                                if (user_object instanceof ListTag<?> list_tag) {
-                                    if (list_tag.getTypeClass() == EndTag.class) {
-                                        @SuppressWarnings({ "unchecked", "rawtypes" })
-                                        Object new_list = new ListTag(new_tag.getClass());
-                                        if (named) {
-                                            new_list = new NamedTag(((NamedTag) parent.getUserObject()).getName(), (Tag<?>)new_list);
-                                        }
-                                        parent.setUserObject(new_list);
-                                    }
-                                }
-                            }
-
-                            parent.add(new DefaultMutableTreeNode(clone(new_tag)));
-                            treeModel.reload(parent);
-                        }
-                    } catch (CancellationException n) {
-                        // do nothing
-                    }
-                });
-            });
+            var add_in_button = createAddInButton(tree, treeModel);
             options_panel.add(add_in_button);
-
-            var add_before_button = new JButton("New Tag Before...");
-            add_before_button.addActionListener((e) -> {
-                if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
-                    throw new IllegalStateException("No node selected");
-
-                var o = ((DefaultMutableTreeNode) node.getParent()).getUserObject();
-
-                if (o instanceof NamedTag named_tag) {
-                    o = named_tag.getTag();
-                }
-
-                var tag = o;
-                var selected = tree.getSelectionPaths();
-
-                Thread.ofVirtual().start(() -> {
-                    try {
-                        var new_tag = newTagOf(getTag(tag));
-                        if (new_tag == null) {
-                            return;
-                        }
-                        for (var path : selected) {
-                            var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
-                            var new_node = new DefaultMutableTreeNode(clone(new_tag));
-                            ((DefaultMutableTreeNode) parent.getParent()).insert(new_node,
-                                    parent.getParent().getIndex(parent));
-                            treeModel.reload(parent.getParent());
-                        }
-                    } catch (CancellationException n) {
-                        // do nothing
-                    }
-                });
-            });
+            
+            var add_before_button = createAddBeforeButton(tree, treeModel);
             options_panel.add(add_before_button);
-
-            var add_after_button = new JButton("New Tag After...");
-            add_after_button.addActionListener((e) -> {
-                if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
-                    throw new IllegalStateException("No node selected");
-
-                var o = ((DefaultMutableTreeNode)node.getParent()).getUserObject();
-
-                if (o instanceof NamedTag named_tag) {
-                    o = named_tag.getTag();
-                }
-
-                var tag = o;
-                var selected = tree.getSelectionPaths();
-                
-                Thread.ofVirtual().start(() -> {
-                    try {
-                        var new_tag = newTagOf(getTag(tag));
-                        if (new_tag == null) {
-                            return;
-                        }
-                        for (var path : selected) {
-                            var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
-                            var new_node = new DefaultMutableTreeNode(clone(new_tag));
-                            ((DefaultMutableTreeNode) parent.getParent()).insert(new_node, parent.getParent().getIndex(parent) + 1);
-                            treeModel.reload(parent.getParent());
-                        }
-                    } catch (CancellationException n) {
-                        // do nothing
-                    }
-                });
-            });
+            
+            var add_after_button = createAddAfterButton(tree, treeModel);
             options_panel.add(add_after_button);
-
-            var rename_button = new JButton("Rename");
-            rename_button.addActionListener((e) -> {
-                if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
-                    throw new IllegalStateException("No node selected");
-                
-                var tag = (NamedTag)node.getUserObject();
-
-                var selected = tree.getSelectionPaths();
-                
-                Thread.ofVirtual().start(() -> {
-                    var new_name = JOptionPane.showInputDialog(frame, "Enter new name", tag.getName());
-                    if (new_name == null) {
-                        return;
-                    }
-
-                    for (var path : selected) {
-                        var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
-                        if (parent.getUserObject() instanceof NamedTag named_tag) {
-                            named_tag.setName(new_name);
-                            treeModel.reload(parent);
-                        }
-                    }
-                });
-            });
+            
+            var rename_button = createRenameButton(tree, treeModel);
             options_panel.add(rename_button);
-
-            var edit_button = new JButton("Edit");
-            edit_button.addActionListener((e) -> {
-                if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
-                    throw new IllegalStateException("No node selected");
-
-                var o = node.getUserObject();
-                if (o instanceof NamedTag named_tag) {
-                    o = named_tag.getTag();
-                }
-
-                var tag = o;
-                var selected = tree.getSelectionPaths();
-
-                Thread.ofVirtual().start(() -> {
-                    try {
-                        Object new_tag = edit(tag);
-                        if (new_tag == null) {
-                            return;
-                        }
-                        
-                        for (var path : selected) {
-                            var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
-                            if (parent.getUserObject() instanceof NamedTag named_tag) {
-                                parent.setUserObject(new NamedTag(named_tag.getName(), (Tag<?>)clone(new_tag)));
-                            } else {
-                                parent.setUserObject(clone(new_tag));
-                            }
-                        }
-    
-                        treeModel.reload(node);
-                    } catch (CancellationException n) {
-                        // do nothing
-                    }
-                });
-            });
+            
+            var edit_button = createEditButton(tree, treeModel);
             options_panel.add(edit_button);
-
-            var delete_button = new JButton("Delete");
-            delete_button.addActionListener((e) -> {
-                if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode))
-                    throw new IllegalStateException("No node selected");
-
-                var selected = tree.getSelectionPaths();
-
-                Thread.ofVirtual().start(() -> {
-                    for (var path : selected) {
-                        var child = (DefaultMutableTreeNode) path.getLastPathComponent();
-                        var parent = (DefaultMutableTreeNode) child.getParent();
-                        child.removeFromParent();
-                        treeModel.reload(parent);
-                    }
-                    tree.setSelectionPaths(null);
-                });
-            });
+            
+            var delete_button = createDeleteButton(tree, treeModel);
             options_panel.add(delete_button);
-
-            var duplicate_button = new JButton("Duplicate");
-            duplicate_button.addActionListener((e) -> {
-                if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
-                    throw new IllegalStateException("No node selected");
-
-                var selected = tree.getSelectionPaths();
-
-                Thread.ofVirtual().start(() -> {
-                    for (var path : selected) {
-                        var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
-                        var node_tree = reconstructNbt(parent.getUserObject(), parent);
-                        var new_node = new DefaultMutableTreeNode(node_tree);
-                        load(new_node);
-                        parent = (DefaultMutableTreeNode) parent.getParent();
-                        parent.insert(new_node, parent.getIndex(node) + 1);
-                        treeModel.reload(parent);
-                    }
-                });
-            });
+            
+            var duplicate_button = createDuplicateButton(tree, treeModel);
             options_panel.add(duplicate_button);
 
             tree.addTreeSelectionListener((_) -> {
@@ -411,7 +211,7 @@ public class NBTView {
                     } else if (e.getClickCount() == 3) {
                         if (!edit_button.isEnabled()) {
                             if (tree.isExpanded(tree.getSelectionPath())) {
-                                collapseAll(tree.getSelectionPath(), tree);
+                                collapseAll(Objects.requireNonNull(tree.getSelectionPath()), tree);
                             } else {
                                 expandAll(tree.getSelectionPath(), tree);
                             }
@@ -508,7 +308,7 @@ public class NBTView {
                 public void keyPressed(KeyEvent e) {
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                         synchronized (matches) {
-                            if (matches.size() > 0) {
+                            if (!matches.isEmpty()) {
                                 index = (index + 1) % matches.size();
                                 focus();
                             }
@@ -555,41 +355,24 @@ public class NBTView {
         var save_panel = new JPanel();
         {
             var close_button = new JButton("Discard Changes and Close");
-            close_button.addActionListener((e) -> {
-                Thread.ofVirtual().start(() -> {
-                    close();
-                });
-            });
+            close_button.addActionListener((e) -> Thread.ofVirtual().start(this::close));
             save_panel.add(close_button);
 
 
             save_panel.add(Box.createHorizontalStrut(100));
 
             var save_button = new JButton("Save");
-            save_button.addActionListener((e) -> {
-                Thread.ofVirtual().start(() -> {
-                    try {
-                        save();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                        JOptionPane.showMessageDialog(frame, "Failed to save file: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                });
-            });
+            save_button.addActionListener((e) -> Thread.ofVirtual().start(() -> {
+                try {
+                    save();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Failed to save file: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }));
             save_panel.add(save_button);
-
-            var save_and_close_button = new JButton("Save and Close");
-            save_and_close_button.addActionListener((e) -> {
-                Thread.ofVirtual().start(() -> {
-                    try {
-                        save();
-                        close();
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                        JOptionPane.showMessageDialog(frame, "Failed to save file: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                });
-            });
+            
+            var save_and_close_button = createSaveAndCloseButton();
             save_panel.add(save_and_close_button);
 
         }
@@ -603,13 +386,262 @@ public class NBTView {
 
         frame.setVisible(true);
     }
+    
+    private JButton createSaveAndCloseButton() {
+        var save_and_close_button = new JButton("Save and Close");
+        save_and_close_button.addActionListener((_) -> Thread.ofVirtual().start(() -> {
+            try {
+                save();
+                close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Failed to save file: " + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }));
+        return save_and_close_button;
+    }
+    
+    private static JButton createDuplicateButton(JTree tree, DefaultTreeModel treeModel) {
+        var duplicate_button = new JButton("Duplicate");
+        duplicate_button.addActionListener((e) -> {
+            if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
+                throw new IllegalStateException("No node selected");
 
-    // public void load(NamedNBTNode node) {
-    //     load(node, node.getNamedTag().getTag());
-    // }
-    // public void load(NBTNode<?> node) {
-    //     load(node, node.getTag());
-    // }
+            var selected = tree.getSelectionPaths();
+
+            Thread.ofVirtual().start(() -> {
+                for (var path : selected) {
+                    var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
+                    var node_tree = reconstructNbt(parent.getUserObject(), parent);
+                    var new_node = new DefaultMutableTreeNode(node_tree);
+                    load(new_node);
+                    parent = (DefaultMutableTreeNode) parent.getParent();
+                    parent.insert(new_node, parent.getIndex(node) + 1);
+                    treeModel.reload(parent);
+                }
+            });
+        });
+        return duplicate_button;
+    }
+    
+    private JButton createDeleteButton(JTree tree, DefaultTreeModel treeModel) {
+        var delete_button = new JButton("Delete");
+        delete_button.addActionListener((e) -> {
+            if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode))
+                throw new IllegalStateException("No node selected");
+
+            var selected = tree.getSelectionPaths();
+
+            Thread.ofVirtual().start(() -> {
+                for (var path : selected) {
+                    var child = (DefaultMutableTreeNode) path.getLastPathComponent();
+                    var parent = (DefaultMutableTreeNode) child.getParent();
+                    child.removeFromParent();
+                    treeModel.reload(parent);
+                }
+                tree.setSelectionPaths(null);
+            });
+        });
+        return delete_button;
+    }
+    
+    private JButton createEditButton(JTree tree, DefaultTreeModel treeModel) {
+        var edit_button = new JButton("Edit");
+        edit_button.addActionListener((e) -> {
+            if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
+                throw new IllegalStateException("No node selected");
+
+            var o = node.getUserObject();
+            if (o instanceof NamedTag named_tag) {
+                o = named_tag.getTag();
+            }
+
+            var tag = o;
+            var selected = tree.getSelectionPaths();
+
+            Thread.ofVirtual().start(() -> {
+                try {
+                    Object new_tag = edit(tag);
+                    if (new_tag == null) {
+                        return;
+                    }
+                    
+                    for (var path : selected) {
+                        var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
+                        if (parent.getUserObject() instanceof NamedTag named_tag) {
+                            parent.setUserObject(new NamedTag(named_tag.getName(), (Tag<?>)clone(new_tag)));
+                        } else {
+                            parent.setUserObject(clone(new_tag));
+                        }
+                    }
+
+                    treeModel.reload(node);
+                } catch (CancellationException n) {
+                    // do nothing
+                }
+            });
+        });
+        return edit_button;
+    }
+    
+    private JButton createRenameButton(JTree tree, DefaultTreeModel treeModel) {
+        var rename_button = new JButton("Rename");
+        rename_button.addActionListener((e) -> {
+            if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
+                throw new IllegalStateException("No node selected");
+            
+            var tag = (NamedTag)node.getUserObject();
+
+            var selected = tree.getSelectionPaths();
+            
+            Thread.ofVirtual().start(() -> {
+                var new_name = JOptionPane.showInputDialog(frame, "Enter new name", tag.getName());
+                if (new_name == null) {
+                    return;
+                }
+
+                for (var path : selected) {
+                    var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
+                    if (parent.getUserObject() instanceof NamedTag named_tag) {
+                        named_tag.setName(new_name);
+                        treeModel.reload(parent);
+                    }
+                }
+            });
+        });
+        return rename_button;
+    }
+    
+    private JButton createAddAfterButton(JTree tree, DefaultTreeModel treeModel) {
+        var add_after_button = new JButton("New Tag After...");
+        add_after_button.addActionListener((e) -> {
+            if (!(tree.getSelectionPath() instanceof TreePath treepath
+                    && treepath.getLastPathComponent() instanceof DefaultMutableTreeNode node))
+                throw new IllegalStateException("No node selected");
+
+            var o = ((DefaultMutableTreeNode)node.getParent()).getUserObject();
+
+            if (o instanceof NamedTag named_tag) {
+                o = named_tag.getTag();
+            }
+
+            var tag = o;
+            var selected = tree.getSelectionPaths();
+            
+            Thread.ofVirtual().start(() -> {
+                try {
+                    var new_tag = newTagOf(Objects.requireNonNull(getTag(tag)));
+                    if (new_tag == null) {
+                        return;
+                    }
+                    assert selected != null;
+                    for (var path : selected) {
+                        var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
+                        var new_node = new DefaultMutableTreeNode(clone(new_tag));
+                        ((MutableTreeNode) parent.getParent()).insert(new_node, parent.getParent().getIndex(parent) + 1);
+                        treeModel.reload(parent.getParent());
+                    }
+                } catch (CancellationException n) {
+                    // do nothing
+                }
+            });
+        });
+        return add_after_button;
+    }
+    
+    private JButton createAddBeforeButton(JTree tree, DefaultTreeModel treeModel) {
+        var add_before_button = new JButton("New Tag Before...");
+        add_before_button.addActionListener((e) -> {
+            if (!(tree.getSelectionPath() instanceof TreePath treepath
+                    && treepath.getLastPathComponent() instanceof DefaultMutableTreeNode node))
+                throw new IllegalStateException("No node selected");
+
+            var o = ((DefaultMutableTreeNode) node.getParent()).getUserObject();
+
+            if (o instanceof NamedTag named_tag) {
+                o = named_tag.getTag();
+            }
+
+            var tag = o;
+            var selected = tree.getSelectionPaths();
+
+            Thread.ofVirtual().start(() -> {
+                try {
+                    var new_tag = newTagOf(Objects.requireNonNull(getTag(tag)));
+                    if (new_tag == null) {
+                        return;
+                    }
+                    assert selected != null;
+                    for (var path : selected) {
+                        var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
+                        var new_node = new DefaultMutableTreeNode(clone(new_tag));
+                        ((MutableTreeNode) parent.getParent()).insert(new_node,
+                                parent.getParent().getIndex(parent));
+                        treeModel.reload(parent.getParent());
+                    }
+                } catch (CancellationException n) {
+                    // do nothing
+                }
+            });
+        });
+        return add_before_button;
+    }
+    
+    private JButton createAddInButton(JTree tree, DefaultTreeModel treeModel) {
+        var add_in_button = new JButton("New Tag In...");
+        add_in_button.addActionListener((e) -> {
+            if (!(tree.getSelectionPath().getLastPathComponent() instanceof DefaultMutableTreeNode node))
+                throw new IllegalStateException("No node selected");
+
+            var o = node.getUserObject();
+
+            if (o instanceof NamedTag named_tag) {
+                o = named_tag.getTag();
+            }
+
+            var tag = o;
+            var selected = tree.getSelectionPaths();
+            
+            Thread.ofVirtual().start(() -> {
+                try {
+                    var new_tag = newTagOf(getTag(tag));
+                    if (new_tag == null) {
+                        return;
+                    }
+                    for (var path : selected) {
+                        var parent = (DefaultMutableTreeNode) path.getLastPathComponent();
+
+                        // change the list tag to the correct type if it was of type EndTag
+                        {
+                            var user_object = parent.getUserObject();
+                            var named = false;
+                            if (user_object instanceof NamedTag named_tag) {
+                                user_object = named_tag.getTag();
+                                named = true;
+                            }
+                            if (user_object instanceof ListTag<?> list_tag) {
+                                if (list_tag.getTypeClass() == EndTag.class) {
+                                    @SuppressWarnings({ "unchecked", "rawtypes" })
+                                    Object new_list = new ListTag(new_tag.getClass());
+                                    if (named) {
+                                        new_list = new NamedTag(((NamedTag) parent.getUserObject()).getName(), (Tag<?>)new_list);
+                                    }
+                                    parent.setUserObject(new_list);
+                                }
+                            }
+                        }
+
+                        parent.add(new DefaultMutableTreeNode(clone(new_tag)));
+                        treeModel.reload(parent);
+                    }
+                } catch (CancellationException n) {
+                    // do nothing
+                }
+            });
+        });
+        return add_in_button;
+    }
+    
     public static void load(DefaultMutableTreeNode node) {
         var o = node.getUserObject();
         if (o instanceof NamedTag named_tag) {
@@ -664,7 +696,7 @@ public class NBTView {
     }
     public static Tag<?> reconstructNbt(Tag<?> tag, DefaultMutableTreeNode node) {
         return switch (tag) {
-            case CompoundTag compound_tag -> {
+            case CompoundTag _ -> {
                 var new_tag = new CompoundTag();
                 for (var i = 0; i < node.getChildCount(); ++i) {
                     var child = (DefaultMutableTreeNode) node.getChildAt(i);
@@ -729,41 +761,41 @@ public class NBTView {
     }
 
     enum TagType {
-        compound, list, int_array, long_array, byte_array,
-        byte_, short_, int_, long_, float_, double_, string_;
+        COMPOUND, LIST, INT_ARRAY, LONG_ARRAY, BYTE_ARRAY,
+        BYTE, SHORT, INT, LONG, FLOAT, DOUBLE, STRING;
 
         public Class<?> getTypeClass() {
             return switch (this) {
-                case compound -> CompoundTag.class;
-                case list -> ListTag.class;
-                case int_array -> IntArrayTag.class;
-                case long_array -> LongArrayTag.class;
-                case byte_array -> ByteArrayTag.class;
-                case byte_ -> ByteTag.class;
-                case short_ -> ShortTag.class;
-                case int_ -> IntTag.class;
-                case long_ -> LongTag.class;
-                case float_ -> FloatTag.class;
-                case double_ -> DoubleTag.class;
-                case string_ -> StringTag.class;
+                case COMPOUND -> CompoundTag.class;
+                case LIST -> ListTag.class;
+                case INT_ARRAY -> IntArrayTag.class;
+                case LONG_ARRAY -> LongArrayTag.class;
+                case BYTE_ARRAY -> ByteArrayTag.class;
+                case BYTE -> ByteTag.class;
+                case SHORT -> ShortTag.class;
+                case INT -> IntTag.class;
+                case LONG -> LongTag.class;
+                case FLOAT -> FloatTag.class;
+                case DOUBLE -> DoubleTag.class;
+                case STRING -> StringTag.class;
             };
         }
 
         @Override
         public String toString() {
             return switch (this) {
-                case compound -> "Compound";
-                case list -> "List";
-                case int_array -> "Int Array";
-                case long_array -> "Long Array";
-                case byte_array -> "Byte Array";
-                case byte_ -> "Byte";
-                case short_ -> "Short";
-                case int_ -> "Int";
-                case long_ -> "Long";
-                case float_ -> "Float";
-                case double_ -> "Double";
-                case string_ -> "String";
+                case COMPOUND -> "Compound";
+                case LIST -> "List";
+                case INT_ARRAY -> "Int Array";
+                case LONG_ARRAY -> "Long Array";
+                case BYTE_ARRAY -> "Byte Array";
+                case BYTE -> "Byte";
+                case SHORT -> "Short";
+                case INT -> "Int";
+                case LONG -> "Long";
+                case FLOAT -> "Float";
+                case DOUBLE -> "Double";
+                case STRING -> "String";
             };
         }
     }
@@ -801,63 +833,12 @@ public class NBTView {
     private Object newTagOf(Tag<?> parent) {
 
         return switch (parent) {
-            case CompoundTag compound_tag -> {
+            case CompoundTag _ -> {
                 var dialog = new JDialog(frame);
                 var future = new CompletableFuture<Object>();
-            
-                var panel = new JPanel();
-                panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-                panel.setBorder(new EmptyBorder(5, 5, 5, 5));
-
-                var name_field = new JTextField();
-                panel.add(name_field);
-
-                var container_type_box = new JComboBox<TagType>();
-                container_type_box.setEnabled(false);
-
-                var type_box = new JComboBox<TagType>(TagType.values());
-                type_box.addActionListener((e) -> {
-                    var type = (TagType) type_box.getSelectedItem();
-                    if (type == TagType.list) {
-                        container_type_box.setModel(new DefaultComboBoxModel<>(TagType.values()));
-                        container_type_box.setEnabled(true);
-                    } else {
-                        container_type_box.setEnabled(false);
-                        container_type_box.setModel(new DefaultComboBoxModel<>());
-                    }
-                });
-
-                panel.add(type_box);
-                panel.add(container_type_box);
-
-                var ok_button = new JButton("OK");
-                ok_button.addActionListener((e) -> {
-                    var name = name_field.getText();
-                    var type = (TagType) type_box.getSelectedItem();
-                    Tag<?> new_tag = switch (type) {
-                        case compound -> new CompoundTag();
-                        case list -> {
-                            var container_type = (TagType) container_type_box.getSelectedItem();
-                            var contain_type = container_type.getTypeClass();
-                            @SuppressWarnings({ "unchecked", "rawtypes" })
-                            var tag = new ListTag(contain_type);
-                            yield tag;
-                        }
-                        case int_array -> new IntArrayTag();
-                        case long_array -> new LongArrayTag();
-                        case byte_array -> new ByteArrayTag();
-                        case byte_ -> new ByteTag();
-                        case double_ -> new DoubleTag();
-                        case float_ -> new FloatTag();
-                        case int_ -> new IntTag();
-                        case long_ -> new LongTag();
-                        case short_ -> new ShortTag();
-                        case string_ -> new StringTag();
-                    };
-                    future.complete(new NamedTag(name, new_tag));
-                });
-                panel.add(ok_button);
-
+                
+                var panel = createNewNamedTagPromptPanel(future);
+                
                 dialog.setContentPane(panel);
                 dialog.pack();
                 dialog.setLocationRelativeTo(frame);
@@ -869,14 +850,13 @@ public class NBTView {
                         future.cancel(false);
                     }
                 });
-
-                var result = future.handle((e, t) -> {
+                
+                yield future.handle((e, t) -> {
                     dialog.dispose();
                     if (t != null)
                         throw unchecked(t);
                     return e;
                 }).join();
-                yield result;
             }
 
             case ListTag<?> list_tag -> {
@@ -885,23 +865,9 @@ public class NBTView {
                 if (type == ListTag.class) {
                     var dialog = new JDialog(frame);
                     var future = new CompletableFuture<Object>();
-
-                    var panel = new JPanel();
-                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-
-                    var container_type_box = new JComboBox<TagType>(TagType.values());
-                    panel.add(container_type_box);
-
-                    var ok_button = new JButton("OK");
-                    ok_button.addActionListener((e) -> {
-                        var container_type = (TagType) container_type_box.getSelectedItem();
-                        var contain_type = container_type.getTypeClass();
-                        @SuppressWarnings({ "unchecked", "rawtypes" })
-                        var tag = new ListTag(contain_type);
-                        future.complete(tag);
-                    });
-                    panel.add(ok_button);
-
+                    
+                    var panel = createNewListTagPromptPanel(future);
+                    
                     dialog.setContentPane(panel);
                     dialog.pack();
                     dialog.setLocationRelativeTo(frame);
@@ -923,56 +889,9 @@ public class NBTView {
                     // you'll be able to add any tag to this list
                     var dialog = new JDialog(frame);
                     var future = new CompletableFuture<Object>();
-
-                    var panel = new JPanel();
-                    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-                    panel.setBorder(new EmptyBorder(5, 5, 5, 5));
-
-                    var container_type_box = new JComboBox<TagType>();
-                    container_type_box.setEnabled(false);
-
-                    var type_box = new JComboBox<TagType>(TagType.values());
-                    type_box.addActionListener((e) -> {
-                        var selected_type = (TagType) type_box.getSelectedItem();
-                        if (selected_type == TagType.list) {
-                            container_type_box.setModel(new DefaultComboBoxModel<>(TagType.values()));
-                            container_type_box.setEnabled(true);
-                        } else {
-                            container_type_box.setEnabled(false);
-                            container_type_box.setModel(new DefaultComboBoxModel<>());
-                        }
-                    });
-
-                    panel.add(type_box);
-                    panel.add(container_type_box);
-
-                    var ok_button = new JButton("OK");
-                    ok_button.addActionListener((e) -> {
-                        var selected_type = (TagType) type_box.getSelectedItem();
-                        Tag<?> new_tag = switch (selected_type) {
-                            case compound -> new CompoundTag();
-                            case list -> {
-                                var container_type = (TagType) container_type_box.getSelectedItem();
-                                var contain_type = container_type.getTypeClass();
-                                @SuppressWarnings({ "unchecked", "rawtypes" })
-                                var tag = new ListTag(contain_type);
-                                yield tag;
-                            }
-                            case int_array -> new IntArrayTag();
-                            case long_array -> new LongArrayTag();
-                            case byte_array -> new ByteArrayTag();
-                            case byte_ -> new ByteTag();
-                            case double_ -> new DoubleTag();
-                            case float_ -> new FloatTag();
-                            case int_ -> new IntTag();
-                            case long_ -> new LongTag();
-                            case short_ -> new ShortTag();
-                            case string_ -> new StringTag();
-                        };
-                        future.complete(new_tag);
-                    });
-                    panel.add(ok_button);
-
+                    
+                    var panel = createNewTagPromptPanel(future);
+                    
                     dialog.setContentPane(panel);
                     dialog.pack();
                     dialog.setLocationRelativeTo(frame);
@@ -1001,14 +920,145 @@ public class NBTView {
                 }
                 yield result;
             }
-            case IntArrayTag int_array_tag -> (Integer) 0;
-            case LongArrayTag long_array_tag -> (Long) 0L;
-            case ByteArrayTag byte_array_tag -> (Byte) (byte) 0;
-
+            case IntArrayTag _ -> 0;
+            case LongArrayTag _ -> 0L;
+            case ByteArrayTag _ -> 0;
             default -> null;
         };
     }
-
+    
+    private static JPanel createNewTagPromptPanel(CompletableFuture<Object> future) {
+        var panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        
+        var container_type_box = new JComboBox<TagType>();
+        container_type_box.setEnabled(false);
+        
+        var type_box = new JComboBox<TagType>(TagType.values());
+        type_box.addActionListener((e) -> {
+            var selected_type = (TagType) type_box.getSelectedItem();
+            if (selected_type == TagType.LIST) {
+                container_type_box.setModel(new DefaultComboBoxModel<>(TagType.values()));
+                container_type_box.setEnabled(true);
+            } else {
+                container_type_box.setEnabled(false);
+                container_type_box.setModel(new DefaultComboBoxModel<>());
+            }
+        });
+        
+        panel.add(type_box);
+        panel.add(container_type_box);
+        
+        var ok_button = createOkButton(future, type_box, container_type_box);
+        panel.add(ok_button);
+        return panel;
+    }
+    
+    private static @NotNull JButton createOkButton(CompletableFuture<Object> future, JComboBox<TagType> type_box, JComboBox<TagType> container_type_box) {
+        var ok_button = new JButton("OK");
+        ok_button.addActionListener((e) -> {
+            var selected_type = (TagType) type_box.getSelectedItem();
+            Tag<?> new_tag = switch (selected_type) {
+                case COMPOUND -> new CompoundTag();
+                case LIST -> {
+                    var container_type = (TagType) container_type_box.getSelectedItem();
+                    var contain_type = container_type.getTypeClass();
+                    @SuppressWarnings({ "unchecked", "rawtypes" })
+                    var tag = new ListTag(contain_type);
+                    yield tag;
+                }
+                case INT_ARRAY -> new IntArrayTag();
+                case LONG_ARRAY -> new LongArrayTag();
+                case BYTE_ARRAY -> new ByteArrayTag();
+                case BYTE -> new ByteTag();
+                case DOUBLE -> new DoubleTag();
+                case FLOAT -> new FloatTag();
+                case INT -> new IntTag();
+                case LONG -> new LongTag();
+                case SHORT -> new ShortTag();
+                case STRING -> new StringTag();
+            };
+            future.complete(new_tag);
+        });
+        return ok_button;
+    }
+    
+    private static JPanel createNewListTagPromptPanel(CompletableFuture<Object> future) {
+        var panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        
+        var container_type_box = new JComboBox<TagType>(TagType.values());
+        panel.add(container_type_box);
+        
+        var ok_button = new JButton("OK");
+        ok_button.addActionListener((e) -> {
+            var container_type = (TagType) container_type_box.getSelectedItem();
+            var contain_type = container_type.getTypeClass();
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            var tag = new ListTag(contain_type);
+            future.complete(tag);
+        });
+        panel.add(ok_button);
+        return panel;
+    }
+    
+    private static JPanel createNewNamedTagPromptPanel(CompletableFuture<Object> future) {
+        var panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        
+        var name_field = new JTextField();
+        panel.add(name_field);
+        
+        var container_type_box = new JComboBox<TagType>();
+        container_type_box.setEnabled(false);
+        
+        var type_box = new JComboBox<TagType>(TagType.values());
+        type_box.addActionListener((e) -> {
+            var type = (TagType) type_box.getSelectedItem();
+            if (type == TagType.LIST) {
+                container_type_box.setModel(new DefaultComboBoxModel<>(TagType.values()));
+                container_type_box.setEnabled(true);
+            } else {
+                container_type_box.setEnabled(false);
+                container_type_box.setModel(new DefaultComboBoxModel<>());
+            }
+        });
+        
+        panel.add(type_box);
+        panel.add(container_type_box);
+        
+        var ok_button = new JButton("OK");
+        ok_button.addActionListener((e) -> {
+            var name = name_field.getText();
+            var type = (TagType) type_box.getSelectedItem();
+            Tag<?> new_tag = switch (type) {
+                case COMPOUND -> new CompoundTag();
+                case LIST -> {
+                    var container_type = (TagType) container_type_box.getSelectedItem();
+                    var contain_type = container_type.getTypeClass();
+                    @SuppressWarnings({ "unchecked", "rawtypes" })
+                    var tag = new ListTag(contain_type);
+                    yield tag;
+                }
+                case INT_ARRAY -> new IntArrayTag();
+                case LONG_ARRAY -> new LongArrayTag();
+                case BYTE_ARRAY -> new ByteArrayTag();
+                case BYTE -> new ByteTag();
+                case DOUBLE -> new DoubleTag();
+                case FLOAT -> new FloatTag();
+                case INT -> new IntTag();
+                case LONG -> new LongTag();
+                case SHORT -> new ShortTag();
+                case STRING -> new StringTag();
+            };
+            future.complete(new NamedTag(name, new_tag));
+        });
+        panel.add(ok_button);
+        return panel;
+    }
+    
     private Object edit(Object o) {
         return switch (o) {
             case ByteTag e -> new ByteTag((byte)prompt("Enter new byte value", Byte::parseByte, e.valueToString()));
@@ -1098,18 +1148,14 @@ public class NBTView {
         dialog.pack();
         dialog.setLocationRelativeTo(frame);
         dialog.setVisible(true);
-
-
-    
-
-        var result = future.handle((e, t) -> {
+        
+        
+        return future.handle((e, t) -> {
             dialog.dispose();
-            if (t != null) 
+            if (t != null)
                 throw unchecked(t);
             return e;
         }).join();
-
-        return result;
     }
 
     private static Object clone(Object o) {
@@ -1139,11 +1185,11 @@ public class NBTView {
 
     public static boolean canHold(Tag<?> tag, Object o) {
         return switch (tag) {
-            case CompoundTag compound_tag -> o instanceof NamedTag;
+            case CompoundTag _ -> o instanceof NamedTag;
             case ListTag<?> list_tag -> list_tag.getTypeClass().isInstance(o);
-            case IntArrayTag int_array_tag -> o instanceof Integer;
-            case LongArrayTag long_array_tag -> o instanceof Long;
-            case ByteArrayTag byte_array_tag -> o instanceof Byte;
+            case IntArrayTag _ -> o instanceof Integer;
+            case LongArrayTag _ -> o instanceof Long;
+            case ByteArrayTag _ -> o instanceof Byte;
             default -> false;
         };
     }

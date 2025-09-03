@@ -39,8 +39,7 @@ public interface InstanceFinder {
      * 
      * <p>
      * attempt to find the saves directory for Linux
-     * 
-     * @return your mom
+     *
      */
     void findLinux();
 

@@ -13,12 +13,16 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Optional;
+import java.util.SequencedCollection;
 import java.util.ServiceLoader;
 import java.util.concurrent.CompletableFuture;
 
 public class InstancePickerView extends JComponent {
+    
+    public static final int LAUNGER_ENTRY_WIDTH = 500, LAUNCHER_ENTRY_HEIGHT = 40;
+    public static final int INSTANCE_ENTRY_WIDTH = 300, INSTANCE_ENTRY_HEIGHT = 30;
+    public static final int INSTANCE_PICKER_MIN_HEIGHT = 500;
     
     private final Main main;
     private final ServiceLoader<InstanceFinder> finders = ServiceLoader.load(InstanceFinder.class);
@@ -39,7 +43,7 @@ public class InstancePickerView extends JComponent {
         
         launcher_list.setCellRenderer((_, value, _, _, _) -> {
             var entry = new SaveFinderView(value);
-            entry.setPreferredSize(new Dimension(500, 40));
+            entry.setPreferredSize(new Dimension(LAUNGER_ENTRY_WIDTH, LAUNCHER_ENTRY_HEIGHT));
             var panel = new JPanel(new BorderLayout());
             panel.add(entry, BorderLayout.CENTER);
             
@@ -71,14 +75,7 @@ public class InstancePickerView extends JComponent {
         
         reloadFinders(true);
         
-//        launcher_list.setBorder(new LineBorder(Color.RED));
         var scroll_pane = new JScrollPane(launcher_list);
-        
-        {
-//            var pref_size = launcher_list.getPreferredSize();
-//            pref_size.height = Math.min(pref_size.height, 500);
-//            scroll_pane.getViewport().setPreferredSize(pref_size);
-        }
         
         this.add(scroll_pane, BorderLayout.CENTER);
         
@@ -112,7 +109,15 @@ public class InstancePickerView extends JComponent {
                     } catch (IOException _) {}
                     return e.getSavesPaths().isEmpty();
                 })
-                .forEach(InstanceFinder::find);
+                .forEach((e) -> {
+                    e.find();
+                    
+                    try {
+                        e.writeCache(cache_path.resolve(e.getClass().getName()));
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                });
         launcher_list.setListData(finder_list.toArray(InstanceFinder[]::new));
     }
     
@@ -121,7 +126,7 @@ public class InstancePickerView extends JComponent {
     }
     
     
-    private static CompletableFuture<SaveDirectory> pickInstance(List<SaveDirectory> instances) {
+    private static CompletableFuture<SaveDirectory> pickInstance(SequencedCollection<SaveDirectory> instances) {
         @SuppressWarnings("OverlyStrongTypeCast")
         var dialog = new JDialog(((JDialog) null), "Select Instance");
         
@@ -142,7 +147,7 @@ public class InstancePickerView extends JComponent {
         
         instance_list.setCellRenderer((_, value, _, _, _) -> {
             var entry = new SaveDirectoryView(value);
-            entry.setPreferredSize(new Dimension(300, 30));
+            entry.setPreferredSize(new Dimension(INSTANCE_ENTRY_WIDTH, INSTANCE_ENTRY_HEIGHT));
             var panel = new JPanel(new BorderLayout());
             panel.add(entry, BorderLayout.CENTER);
             
@@ -169,7 +174,7 @@ public class InstancePickerView extends JComponent {
         
         {
             var pref_size = instance_list.getPreferredSize();
-            pref_size.height = Math.min(pref_size.height, 500);
+            pref_size.height = Math.min(pref_size.height, INSTANCE_PICKER_MIN_HEIGHT);
             scroll_pane.getViewport().setPreferredSize(pref_size);
         }
         

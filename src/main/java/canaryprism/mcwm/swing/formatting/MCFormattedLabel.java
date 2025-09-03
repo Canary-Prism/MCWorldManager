@@ -1,23 +1,23 @@
 package canaryprism.mcwm.swing.formatting;
 
-import java.awt.Font;
-import java.awt.Point;
-import java.util.ArrayList;
-import java.util.List;
-import javax.swing.JComponent;
-
-import org.apache.commons.lang3.ArrayUtils;
-
 import canaryprism.mcwm.swing.formatting.ParsedElement.ColorCode;
 import canaryprism.mcwm.swing.formatting.ParsedElement.FormatCode;
+import org.apache.commons.lang3.ArrayUtils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MCFormattedLabel extends JComponent {
+    
+    public static final int DEFAULT_TEXT_SIZE = 12;
     private volatile String text;
     private final List<ParsedElement> elements;
 
     public MCFormattedLabel(String text) {
         this.text = text;
-        this.elements = new ArrayList<ParsedElement>();
+        this.elements = new ArrayList<>();
         parse();
     }
 
@@ -32,7 +32,7 @@ public class MCFormattedLabel extends JComponent {
         repaint();
     }
 
-    private volatile float size = 12;
+    private volatile float size = DEFAULT_TEXT_SIZE;
 
     public void setTextSize(float size) {
         this.size = size;
@@ -65,44 +65,44 @@ public class MCFormattedLabel extends JComponent {
                 i++;
                 var formatting = switch (chars[i]) {
                     // Java edition colour codes
-                    case '0' -> ColorCode.black;
-                    case '1' -> ColorCode.dark_blue;
-                    case '2' -> ColorCode.dark_green;
-                    case '3' -> ColorCode.dark_aqua;
-                    case '4' -> ColorCode.dark_red;
-                    case '5' -> ColorCode.dark_purple;
-                    case '6' -> ColorCode.gold;
-                    case '7' -> ColorCode.gray;
-                    case '8' -> ColorCode.dark_gray;
-                    case '9' -> ColorCode.blue;
-                    case 'a' -> ColorCode.green;
-                    case 'b' -> ColorCode.aqua;
-                    case 'c' -> ColorCode.red;
-                    case 'd' -> ColorCode.light_purple;
-                    case 'e' -> ColorCode.yellow;
-                    case 'f' -> ColorCode.white;
+                    case '0' -> ColorCode.BLACK;
+                    case '1' -> ColorCode.DARK_BLUE;
+                    case '2' -> ColorCode.DARK_GREEN;
+                    case '3' -> ColorCode.DARK_AQUA;
+                    case '4' -> ColorCode.DARK_RED;
+                    case '5' -> ColorCode.DARK_PURPLE;
+                    case '6' -> ColorCode.GOLD;
+                    case '7' -> ColorCode.GRAY;
+                    case '8' -> ColorCode.DARK_GRAY;
+                    case '9' -> ColorCode.BLUE;
+                    case 'a' -> ColorCode.GREEN;
+                    case 'b' -> ColorCode.AQUA;
+                    case 'c' -> ColorCode.RED;
+                    case 'd' -> ColorCode.LIGHT_PURPLE;
+                    case 'e' -> ColorCode.YELLOW;
+                    case 'f' -> ColorCode.WHITE;
 
                     // Bedrock edition colour codes for good measure
-                    case 'g' -> ColorCode.minecoin_gold;
-                    case 'h' -> ColorCode.material_quartz;
-                    case 'i' -> ColorCode.material_iron;
-                    case 'j' -> ColorCode.material_netherite;
+                    case 'g' -> ColorCode.MINECOIN_GOLD;
+                    case 'h' -> ColorCode.MATERIAL_QUARTZ;
+                    case 'i' -> ColorCode.MATERIAL_IRON;
+                    case 'j' -> ColorCode.MATERIAL_NETHERITE;
                     // these two clash with the java edition format codes so they are commented out
                     // case 'm' -> ColorCode.material_redstone;
                     // case 'n' -> ColorCode.material_copper; 
-                    case 'p' -> ColorCode.material_gold;
-                    case 'q' -> ColorCode.material_emerald;
-                    case 's' -> ColorCode.material_diamond;
-                    case 't' -> ColorCode.material_lapis;
-                    case 'u' -> ColorCode.material_amethyst;
+                    case 'p' -> ColorCode.MATERIAL_GOLD;
+                    case 'q' -> ColorCode.MATERIAL_EMERALD;
+                    case 's' -> ColorCode.MATERIAL_DIAMOND;
+                    case 't' -> ColorCode.MATERIAL_LAPIS;
+                    case 'u' -> ColorCode.MATERIAL_AMETHYST;
 
                     // Java edition format codes
-                    case 'k' -> FormatCode.obfuscated;
-                    case 'l' -> FormatCode.bold;
-                    case 'm' -> FormatCode.strikethrough;
-                    case 'n' -> FormatCode.underline;
-                    case 'o' -> FormatCode.italic;
-                    case 'r' -> FormatCode.reset;
+                    case 'k' -> FormatCode.OBFUSCATED;
+                    case 'l' -> FormatCode.BOLD;
+                    case 'm' -> FormatCode.STRIKETHROUGH;
+                    case 'n' -> FormatCode.UNDERLINE;
+                    case 'o' -> FormatCode.ITALIC;
+                    case 'r' -> FormatCode.RESET;
                     default -> null;
                 };
                 if (formatting != null) {
@@ -140,12 +140,12 @@ public class MCFormattedLabel extends JComponent {
         var x = 0;
 
         for (var element : elements) {
-            if (element instanceof ParsedElement.Text text) {
+            if (element instanceof ParsedElement.Text(String str)) {
                 if (!obfuscated) {
-                    g.drawString(text.text(), x, 0);
+                    g.drawString(str, x, 0);
                 } else {
                     // i have no idea how else to do this
-                    var chars = text.text().toCharArray();
+                    var chars = str.toCharArray();
                     for (int i = 0; i < 2; i++) {
                         ArrayUtils.shuffle(chars);
 
@@ -153,7 +153,7 @@ public class MCFormattedLabel extends JComponent {
                         g.drawString(shuffled, x, 0);
                     }
                 }
-                var text_width = g.getFontMetrics().stringWidth(text.text()); // is an int really the most precise type for this?
+                var text_width = g.getFontMetrics().stringWidth(str); // is an int really the most precise type for this?
                 if (strikethrough) {
                     int y = g.getFontMetrics().getAscent() / 2;
                     g.drawLine(x, -y, x + text_width, -y);
@@ -167,22 +167,12 @@ public class MCFormattedLabel extends JComponent {
                 g.setColor(c.color);
             } else if (element instanceof FormatCode format) {
                 switch (format) {
-                    case obfuscated -> {
-                        obfuscated = true;
-                    }
-                    case bold -> {
-                        g.setFont(g.getFont().deriveFont(Font.BOLD));
-                    }
-                    case strikethrough -> {
-                        strikethrough = true;
-                    }
-                    case underline -> {
-                        underline = true;
-                    }
-                    case italic -> {
-                        g.setFont(g.getFont().deriveFont(Font.ITALIC));
-                    }
-                    case reset -> {
+                    case OBFUSCATED -> obfuscated = true;
+                    case BOLD -> g.setFont(g.getFont().deriveFont(Font.BOLD));
+                    case STRIKETHROUGH -> strikethrough = true;
+                    case UNDERLINE -> underline = true;
+                    case ITALIC -> g.setFont(g.getFont().deriveFont(Font.ITALIC));
+                    case RESET -> {
                         g.setFont(font);
                         g.setColor(color);
                         strikethrough = false;

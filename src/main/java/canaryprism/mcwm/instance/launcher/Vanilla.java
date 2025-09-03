@@ -28,6 +28,7 @@ public final class Vanilla implements InstanceFinder {
     static {
         Optional<Image> temp_icon;
         try (var is = Vanilla.class.getResourceAsStream("/mcwm/launcher/vanilla/icon.png")) {
+            assert is != null;
             temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
@@ -45,7 +46,7 @@ public final class Vanilla implements InstanceFinder {
             var path = Path.of(appdata, ".minecraft", "saves");
             if (Files.exists(path))
                 saves_path.add(new SaveDirectory(icon, INSTANCE_NAME, path));
-        } catch (Exception e) {
+        } catch (Exception _) {
         }
     }
 
@@ -56,7 +57,7 @@ public final class Vanilla implements InstanceFinder {
             var path = Path.of(home, "Library", "Application Support", "minecraft", "saves");
             if (Files.exists(path))
                 saves_path.add(new SaveDirectory(icon, INSTANCE_NAME, path));
-        } catch (Exception e) {
+        } catch (Exception _) {
         }   
     }
 
@@ -67,7 +68,7 @@ public final class Vanilla implements InstanceFinder {
             var path = Path.of(home, ".minecraft", "saves");
             if (Files.exists(path))
                 saves_path.add(new SaveDirectory(icon, INSTANCE_NAME, path));
-        } catch (Exception e) {
+        } catch (Exception _) {
         }
     }
 

@@ -1,17 +1,17 @@
 package canaryprism.mcwm.swing.instance;
 
-import java.awt.Image;
-import javax.imageio.ImageIO;
-import javax.swing.JComponent;
-
 import canaryprism.mcwm.instance.InstanceFinder;
-import canaryprism.mcwm.swing.file.UnknownFile;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
 
 public class SaveFinderView extends JComponent {
 
     private static final Image default_icon;
     static {
         try (var is = SaveFinderView.class.getResourceAsStream("/mcwm/missing.png")) {
+            assert is != null;
             default_icon = ImageIO.read(is);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load texture placeholder", e);
@@ -29,10 +29,6 @@ public class SaveFinderView extends JComponent {
         return finder;
     }
 
-    public void setFile(UnknownFile file) {
-        throw new UnsupportedOperationException("Cannot change file");
-    }
-
 
     @Override
     protected void paintComponent(java.awt.Graphics g1) {
@@ -45,18 +41,16 @@ public class SaveFinderView extends JComponent {
         float height = getHeight();
 
         g.drawImage(icon, 0, 0, Math.round(height), Math.round(height), null);
-
+        
+        var font = g.getFont().deriveFont(height / 2);
+        g.setFont(font);
+        
         var x = height + 5;
-        var y_step = height / 3;
-        var y = 0;
+        
+        var y = height / 2 - this.getFontMetrics(font)
+                .getLineMetrics(finder.getLauncherName(), g)
+                .getBaselineOffsets()[Font.CENTER_BASELINE];
 
-        var font = g.getFont();
-        g.setFont(font.deriveFont(height / 2f));
-
-        y += y_step;
-
-        y += y_step / 15;
-
-        g.drawString(finder.getLauncherName(), x, y += y_step);
+        g.drawString(finder.getLauncherName(), x, y);
     }
 }

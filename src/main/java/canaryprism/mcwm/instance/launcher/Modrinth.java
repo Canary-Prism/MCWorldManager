@@ -27,6 +27,7 @@ public final class Modrinth implements InstanceFinder {
     static {
         Optional<Image> temp_icon;
         try (var is = Modrinth.class.getResourceAsStream("/mcwm/launcher/modrinth/icon.png")) {
+            assert is != null;
             temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
@@ -39,6 +40,7 @@ public final class Modrinth implements InstanceFinder {
     static {
         Optional<Image> temp_icon;
         try (var is = Modrinth.class.getResourceAsStream("/mcwm/launcher/modrinth/default_instance_icon.png")) {
+            assert is != null;
             temp_icon = Optional.ofNullable(ImageIO.read(is));
         } catch (Exception e) {
             e.printStackTrace(); // swallowing exceptions is bad
@@ -114,8 +116,8 @@ public final class Modrinth implements InstanceFinder {
         saves_path.clear();
         var instances = modrinth.resolve("profiles");
         if (Files.isDirectory(instances)) {
-            try {
-                Files.list(instances)
+            try (var stream = Files.list(instances)) {
+                stream
                     .filter((e) -> Files.isDirectory(e.resolve("saves")))
                     .map((e) -> {
                         try {

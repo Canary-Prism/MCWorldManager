@@ -39,6 +39,8 @@ dependencies {
     implementation(libs.querz.nbt)
     implementation(libs.org.json.json)
 
+    compileOnly(libs.jetbrains.annotations)
+
     implementation(libs.directories)
 
     runtimeOnly(libs.vfs2nio)

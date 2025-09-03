@@ -1,8 +1,9 @@
 package canaryprism.mcwm.swing;
 
-import java.awt.Color;
 import canaryprism.mcwm.saves.ParsingException;
 import canaryprism.mcwm.swing.file.UnknownFile;
+
+import java.awt.*;
 
 public final class UnknownEntry extends WorldListEntry {
     private final UnknownFile file;
@@ -22,37 +23,37 @@ public final class UnknownEntry extends WorldListEntry {
 
 
     @Override
-    protected void paintComponent(java.awt.Graphics g1) {
+    protected void paintComponent(Graphics g1) {
         super.paintComponent(g1);
 
-        var g = (java.awt.Graphics2D) g1;
+        var g = (Graphics2D) g1;
 
         float height = getHeight();
-
-        var x = 10;
-        var y_step = height / 3;
-        var y = 0;
-
+        
         var font = g.getFont();
-        g.setFont(font.deriveFont(height / 4f));
+        g.setFont(font.deriveFont(height / 4));
+        var metrics = g.getFontMetrics();
+        
+        var x = 10;
+        var y = height / 3 + metrics.getLineMetrics("mewo", g).getBaselineOffsets()[Font.ROMAN_BASELINE];
 
         g.setColor(Color.red);
         
         if (file.exception() instanceof ParsingException e) {
             var verdict = e.getVerdict();
-            g.drawString("<" + verdict + ">", x, y += y_step);
+            g.drawString("<" + verdict + ">", x, y);
         } else {
-            g.drawString("<Unknown>", x, y += y_step);
+            g.drawString("<Unknown>", x, y);
         }
-
+        
+        y = height - metrics.getMaxDescent() - metrics.getHeight();
+        
         g.setColor(Color.white.darker());
 
-        y += y_step / 15;
+        g.drawString(file.path().toFile().getName(), x, y);
 
-        g.drawString(file.path().toFile().getName(), x, y += y_step);
-
-        y -= y_step / 15;
+        y += metrics.getHeight();
     
-        g.drawString("Error: " + file.exception().getMessage(), x, y += y_step);
+        g.drawString("Error: " + file.exception().getMessage(), x, y);
     }
 }

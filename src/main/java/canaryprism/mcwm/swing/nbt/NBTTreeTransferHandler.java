@@ -1,22 +1,18 @@
 package canaryprism.mcwm.swing.nbt;
 
+import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
+import javax.swing.tree.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JComponent;
-import javax.swing.JTree;
-import javax.swing.TransferHandler;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeNode;
-import javax.swing.tree.TreePath;
+import java.util.Objects;
 
 public class NBTTreeTransferHandler extends TransferHandler {
     DataFlavor nodesFlavor;
-    DataFlavor[] flavors = new DataFlavor[1];
+    final DataFlavor[] flavors = new DataFlavor[1];
     DefaultMutableTreeNode[] nodesToRemove;
     DefaultMutableTreeNode[] transferring_nodes;
 
@@ -82,7 +78,7 @@ public class NBTTreeTransferHandler extends TransferHandler {
         // }
 
         // require only one transferring node
-        if (selRows.length != 1) {
+        if (selRows == null || selRows.length != 1) {
             return false;
         }
 
@@ -96,7 +92,7 @@ public class NBTTreeTransferHandler extends TransferHandler {
         DefaultMutableTreeNode newParent = (DefaultMutableTreeNode) path.getLastPathComponent();
 
         var destination_tag = NBTView.getTag(newParent.getUserObject());
-        var tag = ((DefaultMutableTreeNode) tree.getSelectionPath().getLastPathComponent()).getUserObject();
+        var tag = ((DefaultMutableTreeNode) Objects.requireNonNull(tree.getSelectionPath()).getLastPathComponent()).getUserObject();
 
         if (destination_tag == null || tag == null) {
             return false;
@@ -116,10 +112,10 @@ public class NBTTreeTransferHandler extends TransferHandler {
             // Make up a node array of copies for transfer and
             // another for/of the nodes that will be removed in
             // exportDone after a successful drop.
-            List<DefaultMutableTreeNode> copies = new ArrayList<DefaultMutableTreeNode>();
-            List<DefaultMutableTreeNode> toRemove = new ArrayList<DefaultMutableTreeNode>();
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) paths[0].getLastPathComponent();
-            DefaultMutableTreeNode copy = copy(node);
+            var copies = new ArrayList<DefaultMutableTreeNode>();
+            var toRemove = new ArrayList<DefaultMutableTreeNode>();
+            var node = (DefaultMutableTreeNode) paths[0].getLastPathComponent();
+            var copy = copy(node);
             copies.add(copy);
             toRemove.add(node);
             for (int i = 1; i < paths.length; i++) {
@@ -135,9 +131,9 @@ public class NBTTreeTransferHandler extends TransferHandler {
                     toRemove.add(next);
                 }
             }
-            DefaultMutableTreeNode[] nodes = copies.toArray(new DefaultMutableTreeNode[copies.size()]);
-            this.transferring_nodes = copies.toArray(new DefaultMutableTreeNode[copies.size()]);
-            nodesToRemove = toRemove.toArray(new DefaultMutableTreeNode[toRemove.size()]);
+            DefaultMutableTreeNode[] nodes = copies.toArray(DefaultMutableTreeNode[]::new);
+            this.transferring_nodes = nodes;
+            nodesToRemove = toRemove.toArray(DefaultMutableTreeNode[]::new);
             return new NodesTransferable(nodes);
         }
         return null;
@@ -160,13 +156,13 @@ public class NBTTreeTransferHandler extends TransferHandler {
             JTree tree = (JTree) source;
             DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
             // Remove nodes saved in nodesToRemove in createTransferable.
-            for (int i = 0; i < nodesToRemove.length; i++) {
-                model.removeNodeFromParent(nodesToRemove[i]);
+            for (var node : nodesToRemove) {
+                model.removeNodeFromParent(node);
             }
 
             // set the transferred nodes to be selected
-            for (int i = 0; i < transferring_nodes.length; i++) {
-                tree.addSelectionPath(new TreePath(transferring_nodes[i].getPath()));
+            for (var node : transferring_nodes) {
+                tree.addSelectionPath(new TreePath(node.getPath()));
             }
         }
     }
@@ -193,7 +189,7 @@ public class NBTTreeTransferHandler extends TransferHandler {
         JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
         int childIndex = dl.getChildIndex();
         TreePath dest = dl.getPath();
-        DefaultMutableTreeNode parent = (DefaultMutableTreeNode) dest.getLastPathComponent();
+        MutableTreeNode parent = (MutableTreeNode) dest.getLastPathComponent();
         JTree tree = (JTree) support.getComponent();
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         // Configure for drop mode.
@@ -202,8 +198,9 @@ public class NBTTreeTransferHandler extends TransferHandler {
             index = parent.getChildCount();
         }
         // Add data to model.
-        for (int i = 0; i < nodes.length; i++) {
-            model.insertNodeInto(nodes[i], parent, index++);
+        assert nodes != null;
+        for (var node : nodes) {
+            model.insertNodeInto(node, parent, index++);
         }
         return true;
     }
@@ -213,13 +210,13 @@ public class NBTTreeTransferHandler extends TransferHandler {
     }
 
     public class NodesTransferable implements Transferable {
-        DefaultMutableTreeNode[] nodes;
+        final DefaultMutableTreeNode[] nodes;
 
         public NodesTransferable(DefaultMutableTreeNode[] nodes) {
             this.nodes = nodes;
         }
 
-        public Object getTransferData(DataFlavor flavor)
+        public @NotNull Object getTransferData(DataFlavor flavor)
                 throws UnsupportedFlavorException {
             if (!isDataFlavorSupported(flavor))
                 throw new UnsupportedFlavorException(flavor);

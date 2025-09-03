@@ -68,7 +68,7 @@ public record WorldData(Optional<Image> image, String worldName, String dirName,
             
             var gamemode = Gamemode.fromIndex(data.getIntTag("GameType").asInt());
             if (data.getByteTag("hardcore").asBoolean()) {
-                gamemode = Gamemode.hardcore;
+                gamemode = Gamemode.HARDCORE;
             }
             var cheats = data.getByteTag("allowCommands").asBoolean();
 

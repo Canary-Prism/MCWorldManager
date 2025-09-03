@@ -1,6 +1,13 @@
 package canaryprism.mcwm.swing.nbt;
 
-import java.awt.Image;
+import net.querz.nbt.io.NamedTag;
+import net.querz.nbt.tag.*;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -11,31 +18,10 @@ import java.util.stream.Stream;
 
 import static canaryprism.mcwm.swing.nbt.NBTNodeIcon.*;
 
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-
-import net.querz.nbt.io.NamedTag;
-import net.querz.nbt.tag.ByteArrayTag;
-import net.querz.nbt.tag.ByteTag;
-import net.querz.nbt.tag.CompoundTag;
-import net.querz.nbt.tag.DoubleTag;
-import net.querz.nbt.tag.EndTag;
-import net.querz.nbt.tag.FloatTag;
-import net.querz.nbt.tag.IntArrayTag;
-import net.querz.nbt.tag.IntTag;
-import net.querz.nbt.tag.ListTag;
-import net.querz.nbt.tag.LongArrayTag;
-import net.querz.nbt.tag.LongTag;
-import net.querz.nbt.tag.ShortTag;
-import net.querz.nbt.tag.StringTag;
-import net.querz.nbt.tag.Tag;
-
 public class NBTNodeRenderer extends DefaultTreeCellRenderer {
-
+    
+    public static final int TAG_ICON_SIZE = 25;
+    
     private final HashMap<NBTNodeIcon, Image> icons = new HashMap<>();
     {
         try (var ex = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -44,6 +30,7 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
 
             var futures = Stream.of(icons).map((icon) -> CompletableFuture.runAsync(() -> {
                 try (var is = NBTNodeRenderer.class.getResourceAsStream("/mcwm/nbt/" + icon.file_name)) {
+                    assert is != null;
                     var image = ImageIO.read(is);
                     synchronized (this.icons) {
                         this.icons.put(icon, image);
@@ -83,7 +70,7 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
 
         setText(str);
 
-        var buffered_image = new BufferedImage(25, 25, BufferedImage.TYPE_INT_ARGB);
+        var buffered_image = new BufferedImage(TAG_ICON_SIZE, TAG_ICON_SIZE, BufferedImage.TYPE_INT_ARGB);
 
         var g = buffered_image.createGraphics();
 
@@ -111,7 +98,7 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
                     }
                 }
                 if (copy instanceof Tag && !(copy instanceof CompoundTag) && !(copy instanceof ListTag<?>)) {
-                    g.drawImage(icons.get(tag_icon), 0, 0, null);
+                    g.drawImage(icons.get(TAG_ICON), 0, 0, null);
                 }
             }
             //#endregion
@@ -133,24 +120,24 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
                 }
     
                 var type = switch (copy) {
-                    case ByteTag _ -> byte_icon;
-                    case ShortTag _ -> short_icon;
-                    case IntTag _ -> int_icon;
-                    case LongTag _ -> long_icon;
-                    case FloatTag _ -> float_icon;
-                    case DoubleTag _ -> double_icon;
-                    case ByteArrayTag _ -> byte_array_icon;
-                    case StringTag _ -> string_icon;
-                    case ListTag<?> _ -> list_icon;
-                    case CompoundTag _ -> compound_icon;
-                    case IntArrayTag _ -> int_array_icon;
-                    case LongArrayTag _ -> long_array_icon;
+                    case ByteTag _ -> BYTE_ICON;
+                    case ShortTag _ -> SHORT_ICON;
+                    case IntTag _ -> INT_ICON;
+                    case LongTag _ -> LONG_ICON;
+                    case FloatTag _ -> FLOAT_ICON;
+                    case DoubleTag _ -> DOUBLE_ICON;
+                    case ByteArrayTag _ -> BYTE_ARRAY_ICON;
+                    case StringTag _ -> STRING_ICON;
+                    case ListTag<?> _ -> LIST_ICON;
+                    case CompoundTag _ -> COMPOUND_ICON;
+                    case IntArrayTag _ -> INT_ARRAY_ICON;
+                    case LongArrayTag _ -> LONG_ARRAY_ICON;
 
-                    case EndTag _ -> end_icon;
+                    case EndTag _ -> END_ICON;
     
-                    case Byte _ -> byte_icon;
-                    case Integer _ -> int_icon;
-                    case Long _ -> long_icon;
+                    case Byte _ -> BYTE_ICON;
+                    case Integer _ -> INT_ICON;
+                    case Long _ -> LONG_ICON;
                     default -> null; // should never happen
                 };
     
@@ -161,13 +148,13 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
     
             //#region draw list bracket if is list
             if (tag instanceof ListTag<?>) {
-                g.drawImage(icons.get(list_container_icon), 0, 0, null);
+                g.drawImage(icons.get(LIST_CONTAINER_ICON), 0, 0, null);
             }
             //#endregion
     
             //#region draw named tag if is named tag
             if (named) {
-                g.drawImage(icons.get(named_tag_icon), 0, 0, null);
+                g.drawImage(icons.get(NAMED_TAG_ICON), 0, 0, null);
             }
             //#endregion
         }
@@ -190,12 +177,12 @@ public class NBTNodeRenderer extends DefaultTreeCellRenderer {
             case LongTag longTag -> longTag.valueToString();
             case FloatTag floatTag -> floatTag.valueToString();
             case DoubleTag doubleTag -> doubleTag.valueToString();
-            case ByteArrayTag byteArrayTag -> "<" + node.getChildCount() + " bytes>";
+            case ByteArrayTag _ -> "<" + node.getChildCount() + " bytes>";
             case StringTag stringTag -> stringTag.valueToString();
-            case ListTag<?> listTag -> "<" + node.getChildCount() + " items>";
-            case CompoundTag compoundTag -> "<" + node.getChildCount() + " entries>";
-            case IntArrayTag intArrayTag -> "<" + node.getChildCount() + " ints>";
-            case LongArrayTag longArrayTag -> "<" + node.getChildCount() + " longs>";
+            case ListTag<?> _ -> "<" + node.getChildCount() + " items>";
+            case CompoundTag _ -> "<" + node.getChildCount() + " entries>";
+            case IntArrayTag _ -> "<" + node.getChildCount() + " ints>";
+            case LongArrayTag _ -> "<" + node.getChildCount() + " longs>";
             default -> tag.getClass().getSimpleName();
         };
     }

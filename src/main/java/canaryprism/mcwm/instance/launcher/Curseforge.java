@@ -2,6 +2,7 @@ package canaryprism.mcwm.instance.launcher;
 
 import canaryprism.mcwm.instance.InstanceFinder;
 import canaryprism.mcwm.instance.SaveDirectory;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.nio.file.Files;
@@ -64,7 +65,7 @@ public final class Curseforge implements InstanceFinder {
             }
             
             @Override
-            public <E> E[] toArray(IntFunction<E[]> generator) {
+            public <E> E[] toArray(@NotNull IntFunction<E[]> generator) {
                 if (Desktop.isDesktopSupported()) {
                     try {
                         Desktop.getDesktop().browse(new java.net.URI("https://youtu.be/Vhdwz5apiQQ"));

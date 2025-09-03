@@ -9,6 +9,7 @@ import canaryprism.mcwm.swing.nbt.NBTView;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import dev.dirs.ProjectDirectories;
 import org.apache.commons.io.file.PathUtils;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -96,6 +97,7 @@ public class Main {
         }
         
         var cache_file = working_directory.resolve("cache.zip");
+        @SuppressWarnings("resource")
         var cache_file_fs = FileSystems.newFileSystem(cache_file, Map.of("create", true));
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
@@ -182,36 +184,39 @@ public class Main {
 
         var bottom_panel = new JPanel();
         bottom_panel.setLayout(new BoxLayout(bottom_panel, BoxLayout.Y_AXIS));
-
-        var about_panel = new JPanel(new BorderLayout());
-        about_panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        var version_label = new JLabel("Version: " + VERSION);
-
-        about_panel.add(version_label, BorderLayout.WEST);
-
-        var about_button = new JButton("About");
-        about_button.addActionListener((e) -> {
-            Thread.ofVirtual().start(() -> {
-                JOptionPane.showMessageDialog(frame, """
-                        <html>
-                            <h1>Minecraft World Manager</h1>
-                            <p>made for the non nerds</p>
-                            by Mia
-                            <p>github.com/Canary-Prism/MCWorldManager</p>
-                        </html>
-                        """, "About", JOptionPane.INFORMATION_MESSAGE);
-            });
-        });
-
-        about_panel.add(about_button, BorderLayout.EAST);
-
+        
+        var about_panel = creeateAboutPanel();
+        
         bottom_panel.add(about_panel);
 
         frame.getContentPane().add(bottom_panel, BorderLayout.SOUTH);
 
     }
-
+    
+    private JPanel creeateAboutPanel() {
+        var about_panel = new JPanel(new BorderLayout());
+        about_panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        var version_label = new JLabel("Version: " + VERSION);
+        
+        about_panel.add(version_label, BorderLayout.WEST);
+        
+        var about_button = new JButton("About");
+        about_button.addActionListener((_) -> Thread.ofVirtual().start(() -> {
+            JOptionPane.showMessageDialog(frame, """
+                    <html>
+                        <h1>Minecraft World Manager</h1>
+                        <p>made for the non nerds</p>
+                        by Mia
+                        <p>github.com/Canary-Prism/MCWorldManager</p>
+                    </html>
+                    """, "About", JOptionPane.INFORMATION_MESSAGE);
+        }));
+        
+        about_panel.add(about_button, BorderLayout.EAST);
+        return about_panel;
+    }
+    
     // private final JPanel world_options_panel, archive_options_panel, unknown_options_panel;
 
 
@@ -280,7 +285,6 @@ public class Main {
                 } catch (IOException e) {
                     e.printStackTrace();
                     JOptionPane.showMessageDialog(frame, "Failed to delete: " + name + " - " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
                 }
             }
         });
@@ -303,18 +307,13 @@ public class Main {
                     }
         
                     @Override
-                    public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
+                    public @NotNull Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException {
                         if (!isDataFlavorSupported(flavor)) {
                             throw new UnsupportedFlavorException(flavor);
                         }
                         return List.of(f);
                     }
-                }, new ClipboardOwner() {
-                    @Override
-                    public void lostOwnership(Clipboard clipboard, Transferable contents) {
-                        System.err.println("Lost ownership of clipboard");
-                    }
-                });
+                }, (clipboard, contents) -> System.err.println("Lost ownership of clipboard"));
             } catch (Exception e) {
                 e.printStackTrace();
                 JOptionPane.showMessageDialog(frame, "Failed to copy to clipboard: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -403,10 +402,12 @@ public class Main {
         frame.setVisible(true);
     }
 
+    @SuppressWarnings("unused")
     public void hide() {
         frame.setVisible(false);
     }
 
+    @SuppressWarnings("unused")
     public void close() {
         frame.dispose();
     }

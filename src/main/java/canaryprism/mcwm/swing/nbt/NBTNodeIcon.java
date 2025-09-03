@@ -1,22 +1,22 @@
 package canaryprism.mcwm.swing.nbt;
 
 public enum NBTNodeIcon {
-    byte_array_icon("byte_array.png"),
-    byte_icon("byte.png"),
-    compound_icon("compound.png"),
-    double_icon("double.png"),
-    float_icon("float.png"),
-    int_array_icon("int_array.png"),
-    int_icon("int.png"),
-    list_icon("list.png"),
-    list_container_icon("list_container.png"),
-    long_array_icon("long_array.png"),
-    long_icon("long.png"),
-    short_icon("short.png"),
-    string_icon("string.png"),
-    end_icon("end.png"),
-    tag_icon("tag.png"),
-    named_tag_icon("named.png");
+    BYTE_ARRAY_ICON("byte_array.png"),
+    BYTE_ICON("byte.png"),
+    COMPOUND_ICON("compound.png"),
+    DOUBLE_ICON("double.png"),
+    FLOAT_ICON("float.png"),
+    INT_ARRAY_ICON("int_array.png"),
+    INT_ICON("int.png"),
+    LIST_ICON("list.png"),
+    LIST_CONTAINER_ICON("list_container.png"),
+    LONG_ARRAY_ICON("long_array.png"),
+    LONG_ICON("long.png"),
+    SHORT_ICON("short.png"),
+    STRING_ICON("string.png"),
+    END_ICON("end.png"),
+    TAG_ICON("tag.png"),
+    NAMED_TAG_ICON("named.png");
 
     public final String file_name;
     NBTNodeIcon(String file_name) {
