@@ -31,6 +31,9 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 3.0.4
+- not much, just fixing a bunch of warnings
+
 ### 3.0.3
 - fixed importing and expanding not working at all
 
