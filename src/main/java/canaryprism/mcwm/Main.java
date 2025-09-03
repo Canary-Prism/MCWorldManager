@@ -1,14 +1,11 @@
 package canaryprism.mcwm;
 
-import canaryprism.mcwm.instance.InstanceFinder;
 import canaryprism.mcwm.instance.SaveDirectory;
 import canaryprism.mcwm.swing.InstancePickerView;
 import canaryprism.mcwm.swing.SaveView;
 import canaryprism.mcwm.swing.file.LoadedFile;
 import canaryprism.mcwm.swing.file.WorldFile;
 import canaryprism.mcwm.swing.nbt.NBTView;
-import canaryprism.mcwm.swing.savedir.SaveDirectoryView;
-import canaryprism.mcwm.swing.savedir.SaveFinderView;
 import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import dev.dirs.ProjectDirectories;
 import org.apache.commons.io.file.PathUtils;
@@ -16,14 +13,11 @@ import org.apache.commons.io.file.PathUtils;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.border.LineBorder;
 import javax.swing.filechooser.FileFilter;
 import java.awt.*;
 import java.awt.datatransfer.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -36,7 +30,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -120,146 +113,6 @@ public class Main {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Fatal Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private static CompletableFuture<Path> pickLauncher(List<InstanceFinder> finders) {
-        var dialog = new JDialog((JDialog) null, "Select Minecraft Launcher");
-
-        var future = new CompletableFuture<Path>();
-
-        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-
-        dialog.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                dialog.dispose();
-                future.cancel(true);
-            }
-        });
-
-        var launcher_list = new JList<InstanceFinder>();
-        launcher_list.setListData(finders.toArray(InstanceFinder[]::new));
-
-        launcher_list.setCellRenderer((list, value, index, selected, cellHasFocus) -> {
-            var entry = new SaveFinderView(value);
-            entry.setPreferredSize(new Dimension(400, 40));
-            var panel = new JPanel(new BorderLayout());
-            panel.add(entry, BorderLayout.CENTER);
-
-            panel.setBorder(new LineBorder(Color.gray, 2));
-
-            return panel;
-        });
-
-        launcher_list.setFocusable(false);
-        launcher_list.setSelectedValue(null, false);
-
-        launcher_list.addListSelectionListener((e) -> {
-            if (e.getValueIsAdjusting()) {
-                return;
-            }
-            var selected = launcher_list.getSelectedValue();
-            if (selected != null) {
-                var instances = selected.getSavesPaths();
-                if (instances.size() == 1) {
-                    dialog.dispose();
-                    future.complete(instances.get(0).path());
-                } else {
-                    pickInstance(instances, dialog)
-                    .thenAccept((path) -> {
-                        dialog.dispose();
-                        future.complete(path);
-                    })
-                    .exceptionally((_) -> null);
-                }
-            }
-        });
-
-        var scroll_pane = new JScrollPane(launcher_list);
-
-        {
-            var pref_size = launcher_list.getPreferredSize();
-            pref_size.height = Math.min(pref_size.height, 500);
-            scroll_pane.getViewport().setPreferredSize(pref_size);
-        }
-
-        dialog.add(scroll_pane);
-
-
-        var custom_button = new JButton("Custom Folder");
-        custom_button.addActionListener((e) -> {
-            openDialog().ifPresent((path) -> {
-                dialog.dispose();
-                future.complete(path);
-            });
-        });
-
-        dialog.add(custom_button, BorderLayout.SOUTH);
-
-        dialog.pack();
-        dialog.setResizable(false);
-        dialog.setVisible(true);
-
-        return future;
-    }
-
-    private static CompletableFuture<Path> pickInstance(List<SaveDirectory> instances, JDialog owner) {
-        var dialog = new JDialog(owner, "Select Instance");
-
-        var future = new CompletableFuture<Path>();
-
-        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-
-        dialog.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                dialog.dispose();
-                future.cancel(true);
-            }
-        });
-
-        var instance_list = new JList<SaveDirectory>();
-        instance_list.setListData(instances.toArray(SaveDirectory[]::new));
-
-        instance_list.setCellRenderer((list, value, index, selected, cellHasFocus) -> {
-            var entry = new SaveDirectoryView(value);
-            entry.setPreferredSize(new Dimension(300, 30));
-            var panel = new JPanel(new BorderLayout());
-            panel.add(entry, BorderLayout.CENTER);
-
-            panel.setBorder(new LineBorder(Color.gray, 2));
-
-            return panel;
-        });
-
-        instance_list.setFocusable(false);
-        instance_list.setSelectedValue(null, false);
-
-        instance_list.addListSelectionListener((e) -> {
-            if (e.getValueIsAdjusting()) {
-                return;
-            }
-            var selected = instance_list.getSelectedValue();
-            if (selected != null) {
-                dialog.dispose();
-                future.complete(selected.path());
-            }
-        });
-
-        var scroll_pane = new JScrollPane(instance_list);
-
-        {
-            var pref_size = instance_list.getPreferredSize();
-            pref_size.height = Math.min(pref_size.height, 500);
-            scroll_pane.getViewport().setPreferredSize(pref_size);
-        }
-
-        dialog.add(scroll_pane);
-        dialog.pack();
-        dialog.setResizable(false);
-        dialog.setVisible(true);
-
-        return future;
     }
 
     public static Optional<Path> openDialog() {
