@@ -31,6 +31,10 @@ This program uses Java 22 bc i'm weird like that
 
 ## Historical Changelog
 
+### 3.0.6
+- fixed cache breaking everything
+- fixed mistake of last version not imposing the mac laf on everyone teehee
+
 ### 3.0.5
 - fixed crash for environments where a Taskbar is supported but setting the icon image isn't
 
